@@ -58,7 +58,7 @@ router.get('/companies', getCurrentUser, rateLimitMiddleware, getOrbisCompanyDat
 router.get('/news', getCurrentUser, validateId, rateLimitMiddleware, getOrbisNews); //In-use
 
 // For getting the grid info from orbis[grid] for Companies 
-router.get('/orbisgrid/companies', getCurrentUser, validateId, rateLimitMiddleware, getOrbisGridData);
+router.get('/orbisgrid/companies', validateId, rateLimitMiddleware, getOrbisGridData);
 
 // For getting the grid info from gridendpoint for Comany [From Management Grid] 
 router.get('/grid/companies', getCurrentUser, validateGrid, getGridData)

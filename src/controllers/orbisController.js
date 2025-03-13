@@ -762,7 +762,7 @@ export const getOrbisCompanyData = async (req, res) => {
                         "LEGAL_EVENTS_SOURCE": data.LEGAL_EVENTS_SOURCE[i],
                         "LEGAL_EVENTS_ID": data.LEGAL_EVENTS_ID[i],
                         "LEGAL_EVENTS_TYPES_VALUE": typesValue,
-                        "LEGAL_EVENTS_DETAILS": data.LEGAL_EVENTS_DETAILS[i][0]
+                        "LEGAL_EVENTS_DETAILS": data.LEGAL_EVENTS_DETAILS[i]
                     });
                 }
             }
@@ -860,7 +860,7 @@ export const getOrbisCompanyData = async (req, res) => {
     }
   };
 
-  export const getGridData = async (req, res) => {
+export const getGridData = async (req, res) => {
 
     // Ensure token is valid before making request
     await ensureValidToken();
@@ -906,7 +906,10 @@ export const getOrbisCompanyData = async (req, res) => {
         }
         //  Categorize alerts & Process Data
         const categorizedData = processAlerts(responseData.data.alerts, bvdId);
-
+        let isAllNull = Object.values(categorizedData).every(value => value === null);
+          if (isAllNull){
+                return res.status(200).json({ success: true, message: "No data available", data: false});
+          }
         //  Save Data to Database
         const tableName = "external_supplier_data";
         const updated_response = await updateTable(tableName, categorizedData, ensId, sessionId);
@@ -914,11 +917,11 @@ export const getOrbisCompanyData = async (req, res) => {
         return res.status(200).json(
             updated_response.success
                 ? { success: true, message: "Successfully Updated Information", data: updated_response.data, payload: responseData }
-                : { success: false, message: updated_response.message, data: updated_response.data }
+                : { success: false, message: updated_response.message, data: false }
         );
     } catch (error) {
         console.error(' Error fetching data:', error);
-        return res.status(500).json({ error: 'Internal server error.', details: error.message });
+        return res.status(500).json({success:false, error: 'Internal server error.', details: error.message, data:false });
     }
 };
 
@@ -1036,7 +1039,7 @@ export const getOrbisGridData = async (req, res) => {
     const { sessionId, ensId, bvdId} = req.query;
   
     if (!sessionId || !ensId ||!bvdId) {
-        return res.status(400).json({ error: 'Missing required query parameters: orgName, reportingId, trackingId, city' });
+        return res.status(400).json({success:false, error: 'Missing required query parameters: orgName, reportingId, trackingId, city', data:false });
     }
   
     const endpoint = `https://api.bvdinfo.com/v1/orbis/gridreview/data`;
@@ -1114,18 +1117,22 @@ export const getOrbisGridData = async (req, res) => {
                 event_adverse_media_reputational_risk: amrList.length > 0 ? JSON.stringify(amrList, null, 2) : null,
                 legal: legalList.length > 0 ? JSON.stringify(legalList, null, 2) : null
               };
+              let isAllNull = Object.values(response).every(value => value === null);
+              if (isAllNull){
+                    return res.status(200).json({ success: true, message: "No data available", data: false});
+              }
                 const tableName = "external_supplier_data";
                 const updated_response = await updateTable(tableName, response, ensId, sessionId);
-                return res.status(200).json(updated_response.success ? { success: true, message: "Successfully Updated Information", data: updated_response.data } : { success: false, message: updated_response.message, data: updated_response.data });
+                return res.status(200).json({ success: true, message: "Successfully Updated Information", data: updated_response.data });
             } catch (error) {
-                return res.status(409).json({ success: false,  message: error.message, data: "couldnt save data"});
+                return res.status(409).json({ success: false,  message: error.message, data: false});
             }
         } else {
-            return res.status(500).json({ error: 'API request failed.', details: responseata });
+            return res.status(500).json({success: false, error: 'API request failed.', data: false });
         }
     } catch (error) {
         console.error('Error fetching data from Orbis API:', error);
-        return res.status(500).json({ error: 'Internal server error.', data:"couldnt fetch data" });
+        return res.status(500).json({success: false, error: 'Internal server error.', message:"couldnt fetch data", data:false });
     }
   };
 
@@ -1322,14 +1329,17 @@ export const getGridDataOrganizationWithId = async (req, res) => {
   try {
       let responseData = await makeAuthenticatedRequest(fullUrl, queryString, headers, action);
       if (!responseData) {
-          return res.status(500).json({ error: 'API request failed.' });
+          return res.status(200).json({ success: true,message: "API request failed", error: "API request failed", data: false});
       }
       if (!responseData.gridEntityRec[0]){
-        return res.status(201).json({ success: true, message: 'No event for the particular entity' });
+        return res.status(201).json({ success: false, message: 'No event for the particular entity', data: false });
       }
 
       const categorizedData = categorization(responseData.gridEntityRec[0].gridEntityInfo.gridEntity, bvdId);
-
+       let isAllNull = Object.values(categorizedData).every(value => value === null);
+         if (isAllNull){
+               return res.status(200).json({ success: true, message: "No data available", data: false});
+         }
       //  Save Data to Database
       const tableName = "external_supplier_data";
       const updated_response = await updateTable(tableName, categorizedData, ensId, sessionId);
@@ -1341,7 +1351,7 @@ export const getGridDataOrganizationWithId = async (req, res) => {
       );
   } catch (error) {
       console.error(' Error fetching data:', error);
-      return res.status(500).json({ error: 'Internal server error.', details: error.message });
+      return res.status(500).json({ success: true, error: 'Internal server error.', details: error.message, data: false});
   }
 };
 
@@ -1465,7 +1475,7 @@ export const getOrbisNews = async (req, res) => {
 
     const endpoint = "https://api.bvdinfo.com/v1/orbis/news/data";
     const date = new Date().toISOString().split("T")[0];
-    console.log("daate:", date)
+    console.log("date:", date)
     const query = {
         "WHERE": [
             {"BvDID": [bvdId]},
@@ -1516,7 +1526,7 @@ export const getOrbisNews = async (req, res) => {
                     2 // Pretty-print JSON
                 )
                 : null;
-//              console.log("No of articles:", formattedResponse ? JSON.parse(formattedResponse).length : 0);
+              console.log("No of articles:", formattedResponse ? JSON.parse(formattedResponse).length : 0);
 //              console.log("Articles:", formattedResponse ? JSON.parse(formattedResponse) : null);
             let response = {
                             orbis_news: formattedResponse || null
