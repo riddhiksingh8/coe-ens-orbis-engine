@@ -1,9 +1,6 @@
 import { getOrbisData } from "../mock/orbis.js";
 import { updateInternalOrgDataService } from "../services/internalOrgModel.js";
 import { handleResponse } from "../utils/helpers.js";
-import matchcompaniesresponse from "../dummydata/matchcompanies.json" assert { type: "json" };
-import supplierexternaltable from "../dummydata/supplierexternaltable.json" assert { type: "json" };
-import matchgridresponse from "../dummydata/gridDataResponse.json" assert { type: "json" };
 import { updatedinsertTable, updateTable } from "../utils/db_utils.js";
 import { v4 as uuidv4 } from "uuid";
 import pool from "../config/db.js";
@@ -16,7 +13,17 @@ import {OrbisGridLogin} from '../utils/auth.js';
 
 
 console.log("matchcompaniesresponse", matchcompaniesresponse);
-
+import fs from "fs";
+ 
+ const matchcompaniesresponse = JSON.parse(
+   fs.readFileSync(new URL("../dummydata/matchcompanies.json", import.meta.url))
+ );
+ const supplierexternaltable = JSON.parse(
+   fs.readFileSync(new URL("../dummydata/supplierexternaltable.json", import.meta.url))
+ );
+ const matchgridresponse = JSON.parse(
+   fs.readFileSync(new URL("../dummydata/gridDataResponse.json", import.meta.url))
+ );
 export const updateInternalOrgData = async (req, res, next) => {
   const { orgName, orgIdentifier } = req.body;
 
