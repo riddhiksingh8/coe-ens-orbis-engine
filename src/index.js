@@ -1,52 +1,52 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import pool from "./config/db.js";
-import swaggerJsDoc from "swagger-jsdoc";
-import swaggerUi from "swagger-ui-express";
-import internalRoutes from "./routes/internalRoutes.js";
-import orbisRoutes from "./routes/orbisRouter.js";
-import errorHandling from "./middlewares/errorHandler.js";
-import createOrgTable from "./data/createOrgTable.js";
-import { globSync } from "glob";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import pool from './config/db.js';
+import swaggerJsDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import internalRoutes from './routes/internalRoutes.js';
+import orbisRoutes from './routes/orbisRouter.js';
+import errorHandling from './middlewares/errorHandler.js';
+import createOrgTable from './data/createOrgTable.js';
+import { globSync } from 'glob';
+
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3006;
-const baseUrl = process.env.BASE_URL || `http://localhost:${port || 3006}`;
+const port = process.env.PORT || 3000;
 
 // Middlewares
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
 // Routes
-app.use("/api/v1/internal", internalRoutes);
-app.use("/api/v1/orbis", orbisRoutes);
+app.use('/api/v1/internal', internalRoutes);
+app.use('/api/v1/orbis', orbisRoutes);
 
-let pasth = globSync('./routes/*.js', { absolute: true })
-let routes_path = process.cwd()+'\\src\\routes\\*.js'
-let docs_path = process.cwd()+'\\src\\docs\\*.js'
+let pasth = globSync('./routes/*.js', { absolute: true });
+let routes_path = process.cwd() + '\\src\\routes\\*.js';
+let docs_path = process.cwd() + '\\src\\docs\\*.js';
 
 // Swagger setup
 const swaggerOptions = {
   definition: {
-    openapi: "3.0.0",
+    openapi: '3.0.0',
     info: {
-      title: "ENS-ORBIS-ENGINE API",
-      version: "1.0.0",
-      description: "API documentation for ENS-ORBIS-ENGINE app"
+      title: 'ENS-ORBIS-ENGINE API',
+      version: '1.0.0',
+      description: 'API documentation for ENS-ORBIS-ENGINE app',
     },
     servers: [
       {
-        url: baseUrl, // Server URL
+        url: `http://localhost:${port}`, // Server URL
       },
     ],
   },
-  apis: [routes_path, docs_path]
+  apis: [routes_path, docs_path],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Error handling middleware
 app.use(errorHandling);
@@ -55,14 +55,14 @@ app.use(errorHandling);
 createOrgTable();
 
 // Testing POSTGRES Connection
-app.get("/", async (req, res) => {
-  console.log("Start");
-  const result = await pool.query("SELECT current_database()");
-  console.log("result", result.rows);
+app.get('/', async (req, res) => {
+  console.log('Start');
+  const result = await pool.query('SELECT current_database()');
+  console.log('result', result.rows);
   res.send(`The database name is : ${result.rows[0].current_database}`);
 });
 
 // Server running
 app.listen(port, () => {
-  console.log(`Server is running on ${baseUrl}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });

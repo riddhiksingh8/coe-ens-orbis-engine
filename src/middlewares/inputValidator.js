@@ -57,9 +57,34 @@ const truesightRequestSchema = Joi.object({
   phoneOrFax: Joi.string().min(3)
 });
 
+const truesightRequestSchema1 = Joi.object({
+  orgName: Joi.string().min(3),
+  orgCountry: Joi.string().min(1),
+  sessionId: Joi.string().min(3).required(),
+  ensId: Joi.string().min(3).required(),
+  nationalId: Joi.string().min(3).required(),
+  state: Joi.string().min(3),
+  city: Joi.string().min(3),
+  address: Joi.string().min(3),
+  postCode: Joi.string().min(3),
+  emailOrWebsite: Joi.string().min(3),
+  phoneOrFax: Joi.string().min(3)
+});
+
 export const validatePayload = (req, res, next) => {
   console.log("truesightScheme_req.query",req.query)
   const { error } = truesightRequestSchema.validate(req.query);
+  if (error)
+    return res.status(400).json({
+      status: 400,
+      message: error.details[0].message,
+    });
+  next();
+};
+
+export const validatePayload1 = (req, res, next) => {
+  console.log("truesightScheme_req.query",req.query)
+  const { error } = truesightRequestSchema1.validate(req.query);
   if (error)
     return res.status(400).json({
       status: 400,

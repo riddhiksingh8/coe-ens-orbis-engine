@@ -1,25 +1,21 @@
 import { getOrbisData } from "../mock/orbis.js";
 import { updateInternalOrgDataService } from "../services/internalOrgModel.js";
 import { handleResponse } from "../utils/helpers.js";
+import matchcompaniesresponse from "../dummydata/matchcompanies.json" assert { type: "json" };
+import supplierexternaltable from "../dummydata/supplierexternaltable.json" assert { type: "json" };
+import matchgridresponse from "../dummydata/gridDataResponse.json" assert { type: "json" };
 import { updatedinsertTable, updateTable } from "../utils/db_utils.js";
 import { v4 as uuidv4 } from "uuid";
 import pool from "../config/db.js";
 import crypto from 'crypto';
 import { json } from 'stream/consumers';
 import axios from 'axios';
+import fs from 'fs/promises';
 
 import {OrbisGridLogin} from '../utils/auth.js';
-import fs from "fs";
 
-const matchcompaniesresponse = JSON.parse(
-  fs.readFileSync(new URL("../dummydata/matchcompanies.json", import.meta.url))
-);
-const supplierexternaltable = JSON.parse(
-  fs.readFileSync(new URL("../dummydata/supplierexternaltable.json", import.meta.url))
-);
-const matchgridresponse = JSON.parse(
-  fs.readFileSync(new URL("../dummydata/gridDataResponse.json", import.meta.url))
-);
+
+console.log("matchcompaniesresponse", matchcompaniesresponse);
 
 export const updateInternalOrgData = async (req, res, next) => {
   const { orgName, orgIdentifier } = req.body;
@@ -216,14 +212,14 @@ export const getCompanyData = async (req, res) => {
 
 export const getTruesightCompanyData = async (req, res) => {
     const { orgName, orgCountry, sessionId, ensId, nationalId, state, city, address, postCode, emailOrWebsite, phoneOrFax} = req.query;
-  
+
     if (!orgName || !orgCountry) {
         return res.status(400).json({ error: 'Missing required query parameters: orgName, orgCountry' });
     }
-  
+
     // const endpoint = `${process.env.DOMAIN}v1/orbis/Companies/data`;
     const endpoint = `https://api.bvdinfo.com/v1/orbis/Companies/data`;
-  
+
     const query = {
         WHERE: [
             {
@@ -259,23 +255,90 @@ export const getTruesightCompanyData = async (req, res) => {
             "MATCH.SCORE",
         ],
     };
-  
+
     try {
         const headers = {
             'Content-Type': 'application/json',
             'ApiToken': '1YJ4f2b401471bb0413aa2cfbe1243fa2c61'
         };
-        
-        const response = await axios.get(endpoint, { 
-            params: { QUERY: JSON.stringify(query) }, 
+
+        const response = await axios.get(endpoint, {
+            params: { QUERY: JSON.stringify(query) },
             headers: headers
         });
-  
+
         // const response = matchcompaniesresponse;
-  
+
         if (response.status === 200) {
             const data = response.data;
-            
+
+            return res.status(200).json({ success: true, message: "Successful", data: data["Data"]})
+        } else {
+            return res.status(response.status).json({ error: 'API request failed.', details: response.data });
+        }
+    } catch (error) {
+        console.error('Error fetching data from Orbis API:', error);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+  };
+
+export const getTruesightCompanyData2 = async (req, res) => {
+    const { orgName, orgCountry, sessionId, ensId, nationalId, state, city, address, postCode, emailOrWebsite, phoneOrFax} = req.query;
+
+    const endpoint = `https://api.bvdinfo.com/v1/orbis/Companies/data`;
+
+    const query = {
+        WHERE: [
+            {
+                MATCH: {
+                    Criteria: {
+                        Name: orgName || "",
+                        Country: orgCountry || "",
+                        NationalId: nationalId || "",
+                        State: state || "",
+                        City: city || "",
+                        Address: address || "",
+                        PostCode: postCode || "",
+                        EmailOrWebsite: emailOrWebsite || "",
+                        PhoneOrFax: phoneOrFax || "",
+                    },
+                },
+            },
+        ],
+        SELECT: [
+            "BVDID",
+            "MATCH.NAME",
+            "MATCH.NAME_INTERNATIONAL",
+            "MATCH.ADDRESS",
+            "MATCH.POSTCODE",
+            "MATCH.CITY",
+            "MATCH.COUNTRY",
+            "MATCH.PHONEORFAX",
+            "MATCH.EMAILORWEBSITE",
+            "MATCH.NATIONAL_ID",
+            "MATCH.STATE",
+            "MATCH.ADDRESS_TYPE",
+            "MATCH.HINT",
+            "MATCH.SCORE",
+        ],
+    };
+
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+            'ApiToken': '1YJ4f2b401471bb0413aa2cfbe1243fa2c61'
+        };
+
+        const response = await axios.get(endpoint, {
+            params: { QUERY: JSON.stringify(query) },
+            headers: headers
+        });
+
+        // const response = matchcompaniesresponse;
+
+        if (response.status === 200) {
+            const data = response.data;
+
             return res.status(200).json({ success: true, message: "Successful", data: data["Data"]})
         } else {
             return res.status(response.status).json({ error: 'API request failed.', details: response.data });
@@ -479,7 +542,16 @@ export const getOrbisCompanyData = async (req, res) => {
           {"REACMORE_EXPL_RATIO8": {"INDEXORYEAR":"0","AS":"REACMORE_EXPL_RATIO8"}}, 
           {"REACMORE_EXPL_RATIO9": {"INDEXORYEAR":"0","AS":"REACMORE_EXPL_RATIO9"}}, 
           {"REACMORE_EXPL_RATIO10": {"INDEXORYEAR":"0","AS":"REACMORE_EXPL_RATIO10"}}, 
-          {"REACMORE_EXPL_RATIO10VAL": {"UNIT":0,"INDEXORYEAR":"0","AS":"REACMORE_EXPL_RATIO10VAL"}}
+          {"REACMORE_EXPL_RATIO10VAL": {"UNIT":0,"INDEXORYEAR":"0","AS":"REACMORE_EXPL_RATIO10VAL"}},
+          {"LOAN": {"MODELID":"IND","CURRENCY":"USD","UNIT":3,"INDEXORYEAR":"0","AS":"LOAN"}},
+          {"LTDB": {"MODELID":"IND","CURRENCY":"USD","UNIT":3,"INDEXORYEAR":"0","AS":"LTDB"}},
+          {"14041": {"MODELID":"IND","CURRENCY":"USD","UNIT":3,"INDEXORYEAR":"0","AS":"14041"}},
+          {"LEGAL_EVENTS_DATE": {"AS":"LEGAL_EVENTS_DATE"}},
+          {"LEGAL_EVENTS_DESCRIPTION": {"AS":"LEGAL_EVENTS_DESCRIPTION"}},
+          {"LEGAL_EVENTS_SOURCE": {"AS":"LEGAL_EVENTS_SOURCE"}},
+          {"LEGAL_EVENTS_ID": {"AS":"LEGAL_EVENTS_ID"}},
+          {"LEGAL_EVENTS_TYPES_VALUE": {"AS":"LEGAL_EVENTS_TYPES_VALUE"}},
+          {"LEGAL_EVENTS_DETAILS": {"AS":"LEGAL_EVENTS_DETAILS"}}
         ]
       };
     const headers = {
@@ -489,7 +561,6 @@ export const getOrbisCompanyData = async (req, res) => {
     try {
         const response_data = await axios.post(endpoint, query, { headers });
         let data=response_data.data.Data[0]
-        console.log("date", data.CLOSING_DATE, data.CLOSING_DATE_1, data.CLOSING_DATE_2, data.CLOSING_DATE_3)
         // const data = supplierexternaltable;
         const getValue = (value) => value ?? null;
 
@@ -677,14 +748,36 @@ export const getOrbisCompanyData = async (req, res) => {
             };
 
             pr_reactive_more_risk_score_ratio = Object.values(pr_reactive_more_risk_score_ratio).every(value => value === "n.a") ? null : pr_reactive_more_risk_score_ratio;
+
+            const default_events = [];
+
+            for (let i = 0; i < data.LEGAL_EVENTS_DATE.length; i++) {
+                const typesValue = data.LEGAL_EVENTS_TYPES_VALUE[i];
+
+                // Ensure typesValue is an array and contains "default" (case-insensitive)
+                if (Array.isArray(typesValue) && typesValue.some(value => String(value).toLowerCase() === "default")) {
+                    default_events.push({
+                        "LEGAL_EVENTS_DATE": data.LEGAL_EVENTS_DATE[i],
+                        "LEGAL_EVENTS_DESCRIPTION": data.LEGAL_EVENTS_DESCRIPTION[i],
+                        "LEGAL_EVENTS_SOURCE": data.LEGAL_EVENTS_SOURCE[i],
+                        "LEGAL_EVENTS_ID": data.LEGAL_EVENTS_ID[i],
+                        "LEGAL_EVENTS_TYPES_VALUE": typesValue,
+                        "LEGAL_EVENTS_DETAILS": data.LEGAL_EVENTS_DETAILS[i][0]
+                    });
+                }
+            }
+
+//            console.log(`Filtered Events: ${default_events.length}`);
+            console.log(default_events);
+
         
         if (data) {
             let response = {}
             response = {
                 name: data.NAME || null,
                 country: data.COUNTRY || null,
-                location: (data.CITY_STANDARDIZED && data.COUNTRY) ? (data.CITY_STANDARDIZED +', '+ data.COUNTRY) : null,
-                address: (data.ADDRESS_LINE1 && data.CITY_STANDARDIZED && data.COUNTRY) ? (data.ADDRESS_LINE1 +', '+  data.CITY_STANDARDIZED +', '+  data.COUNTRY) : null,
+                location: [data.CITY_STANDARDIZED, data.COUNTRY].filter(Boolean).join(', ') || null,
+                address: [data.ADDRESS_LINE1, data.CITY_STANDARDIZED, data.COUNTRY].filter(Boolean).join(', ') || null,
                 is_active: data.STATUS?.[0] || null, 
                 operation_type: data.ENTITY_TYPE || null, 
                 website: data.WEBSITE?.[0] ?? null,
@@ -742,6 +835,10 @@ export const getOrbisCompanyData = async (req, res) => {
                 controlling_shareholders_type: data.CSH_ENTITY_TYPE !== null ? JSON.stringify(data.CSH_ENTITY_TYPE, null, 2) : null,
                 pr_more_risk_score_ratio: pr_more_risk_score_ratio !== null ? JSON.stringify(pr_more_risk_score_ratio, null, 2) : null,
                 pr_reactive_more_risk_score_ratio: pr_reactive_more_risk_score_ratio !== null ? JSON.stringify(pr_reactive_more_risk_score_ratio, null, 2) : null,
+                default_events: default_events.length > 0 ? JSON.stringify(default_events, null, 2) : null,
+                long_and_short_term_debt: data.LOAN || null,
+                long_term_debt: data.LTDB || null,
+                total_shareholders_equity: data["14041"] || null,
                 ens_id: ensId,
                 session_id: sessionId
             }; 
@@ -764,7 +861,6 @@ export const getOrbisCompanyData = async (req, res) => {
   };
 
   export const getGridData = async (req, res) => {
-    console.log(" Entered controller");
 
     // Ensure token is valid before making request
     await ensureValidToken();
@@ -808,11 +904,8 @@ export const getOrbisCompanyData = async (req, res) => {
         if (!responseData) {
             return res.status(500).json({ error: 'API request failed.' });
         }
-        console.log("organization response", responseData.data.alert)
         //  Categorize alerts & Process Data
         const categorizedData = processAlerts(responseData.data.alerts, bvdId);
-
-        console.log(" Categorized Data:", categorizedData);
 
         //  Save Data to Database
         const tableName = "external_supplier_data";
@@ -837,7 +930,6 @@ const ensureValidToken = async () => {
 };
 
 const makeAuthenticatedRequest = async (url, payload, headers, action) => {
-  console.log("action", action)
     try {
       if (action.toLowerCase() === "get") {
         const response = await axios.get(url, { headers });
@@ -1022,7 +1114,6 @@ export const getOrbisGridData = async (req, res) => {
                 event_adverse_media_reputational_risk: amrList.length > 0 ? JSON.stringify(amrList, null, 2) : null,
                 legal: legalList.length > 0 ? JSON.stringify(legalList, null, 2) : null
               };
-                console.log("updateTable")
                 const tableName = "external_supplier_data";
                 const updated_response = await updateTable(tableName, response, ensId, sessionId);
                 return res.status(200).json(updated_response.success ? { success: true, message: "Successfully Updated Information", data: updated_response.data } : { success: false, message: updated_response.message, data: updated_response.data });
@@ -1040,12 +1131,11 @@ export const getOrbisGridData = async (req, res) => {
 
 
   export const getGridDataPersonnels = async (req, res) => {
-    console.log(" Entered controller");
 
     // Ensure token is valid before making request
     await ensureValidToken();
 
-    const { personnelName, sessionId, ensId, contactId, country } = req.query;
+    const { personnelName, sessionId, ensId, contactId, country, city } = req.query;
 
 
     const url = "https://service.rdc.eu.com/api/grid-service/v2/inquiry";
@@ -1073,7 +1163,7 @@ export const getOrbisGridData = async (req, res) => {
               "gridContact":{
                  "addr":{
                     "addr1":"",
-                    "city":"",
+                    "city":city | "",
                     "stateProv":"",
                     "postalCode":"",
                     "countryCode":{
@@ -1094,6 +1184,7 @@ export const getOrbisGridData = async (req, res) => {
     try {
         let responseData = await makeAuthenticatedRequest(url, payload, headers, action);        
         if (!responseData) {
+          console.log("error API failed")
             return res.status(500).json({ error: 'API request failed.' });
         }
         //  Categorize alerts & Process Data
@@ -1117,18 +1208,19 @@ export const getOrbisGridData = async (req, res) => {
           event_adverse_media_reputational_risk: [],
           legal: []
         };
-        if (responseData.data.reviewStatus === 'NOMATCH')  
-          return res.status(409).json({ success: false, data: "No Match found" });
+        if (responseData.data.reviewStatus === 'NOMATCH'){  
+          console.log("No match")
+          return res.status(409).json({ success: false, data: "No Match found" });}
         
-        if (responseData.data.reviewStatus === 'LOAD')  
-          return res.status(409).json({ success: false, data: "Tracking ID already in use" });
+        if (responseData.data.reviewStatus === 'LOAD') {
+          console.log("Track Id is not unique") 
+          return res.status(409).json({ success: false, data: "Tracking ID already in use" });}
         
         let alerts=responseData.data.alerts
         alerts.forEach(alert => {
           const nonReviewedAlerts = alert.gridAlertInfo.alerts.nonReviewedAlertEntity;
       
           const alertEntity = nonReviewedAlerts[0]; // Take the first alert
-      
           if (alertEntity) {
               alertEntity.event.forEach(event => {
                   const entityData = {
@@ -1145,7 +1237,6 @@ export const getOrbisGridData = async (req, res) => {
                       eventSourceEntityDate: event.source?.entityDt || "No entity date available",
                       legalFlag: categories.legal.includes(event.subCategory?.categoryCode)
                   };
-      
                   if (categories.bcf.includes(entityData.eventCategory)) categorizedData.event_bribery_fraud_corruption.push(entityData);
                   else if (categories.reg.includes(entityData.eventCategory)) categorizedData.event_regulatory.push(entityData);
                   else if (categories.san.includes(entityData.eventCategory)) categorizedData.event_sanctions.push(entityData);
@@ -1158,34 +1249,41 @@ export const getOrbisGridData = async (req, res) => {
           }
         });
         try {
-          let grid_sanctions= categorizedData.event_sanctions.length > 0 ? JSON.stringify(categorizedData.event_sanctions, null, 2) : null;
-          let grid_regulatory= categorizedData.event_regulatory.length > 0 ? JSON.stringify(categorizedData.event_regulatory, null, 2) : null;
-          let grid_bribery_fraud_corruption= categorizedData.event_bribery_fraud_corruption.length > 0 ? JSON.stringify(categorizedData.event_bribery_fraud_corruption, null, 2) : null;
-          let grid_pep= categorizedData.event_pep.length > 0 ? JSON.stringify(categorizedData.event_pep, null, 2) : null;
-          let grid_adverse_media_other_crimes=  categorizedData.event_adverse_media_other_crimes.length > 0 ? JSON.stringify( categorizedData.event_adverse_media_other_crimes, null, 2) : null;
-          let grid_adverse_media_reputational_risk= categorizedData.event_adverse_media_reputational_risk.length > 0 ? JSON.stringify(categorizedData.event_adverse_media_reputational_risk, null, 2) : null;
-          let grid_legal= categorizedData.legal.length > 0 ? JSON.stringify(categorizedData.legal, null, 2) : null;
-          let result;
-          result = await pool.query(
-              `INSERT INTO grid_management (
-                ens_id,
-                contact_id,
-                session_id,
-                grid_sanctions,
-                grid_regulatory,
-                grid_bribery_fraud_corruption,
-                grid_pep,
-                grid_adverse_media_other_crimes,
-                grid_adverse_media_reputational_risk,
-                grid_legal
-              ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
-              )
-              ON CONFLICT (ens_id, contact_id, session_id) DO NOTHING 
-              RETURNING *;
-              `,
-              [ensId, contactId, sessionId,grid_sanctions,grid_regulatory, grid_bribery_fraud_corruption, grid_pep, grid_adverse_media_other_crimes, grid_adverse_media_reputational_risk, grid_legal]
-            );
+          const grid_sanctions= categorizedData.event_sanctions.length > 0 ? JSON.stringify(categorizedData.event_sanctions, null, 2) : null;
+          const grid_regulatory= categorizedData.event_regulatory.length > 0 ? JSON.stringify(categorizedData.event_regulatory, null, 2) : null;
+          const grid_bribery_fraud_corruption= categorizedData.event_bribery_fraud_corruption.length > 0 ? JSON.stringify(categorizedData.event_bribery_fraud_corruption, null, 2) : null;
+          const grid_pep= categorizedData.event_pep.length > 0 ? JSON.stringify(categorizedData.event_pep, null, 2) : null;
+          const grid_adverse_media_other_crimes=  categorizedData.event_adverse_media_other_crimes.length > 0 ? JSON.stringify( categorizedData.event_adverse_media_other_crimes, null, 2) : null;
+          const grid_adverse_media_reputational_risk= categorizedData.event_adverse_media_reputational_risk.length > 0 ? JSON.stringify(categorizedData.event_adverse_media_reputational_risk, null, 2) : null;
+          const grid_legal= categorizedData.legal.length > 0 ? JSON.stringify(categorizedData.legal, null, 2) : null;
+          const result = await pool.query(
+            `INSERT INTO grid_management (
+              ens_id,
+              contact_id,
+              session_id,
+              grid_sanctions,
+              grid_regulatory,
+              grid_bribery_fraud_corruption,
+              grid_pep,
+              grid_adverse_media_other_crimes,
+              grid_adverse_media_reputational_risk,
+              grid_legal
+            ) VALUES (
+              $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+            )
+            ON CONFLICT (ens_id, contact_id, session_id) 
+            DO UPDATE SET 
+              grid_sanctions = EXCLUDED.grid_sanctions,
+              grid_regulatory = EXCLUDED.grid_regulatory,
+              grid_bribery_fraud_corruption = EXCLUDED.grid_bribery_fraud_corruption,
+              grid_pep = EXCLUDED.grid_pep,
+              grid_adverse_media_other_crimes = EXCLUDED.grid_adverse_media_other_crimes,
+              grid_adverse_media_reputational_risk = EXCLUDED.grid_adverse_media_reputational_risk,
+              grid_legal = EXCLUDED.grid_legal,
+              update_time = NOW()
+            RETURNING *;`,
+            [ensId, contactId, sessionId, grid_sanctions, grid_regulatory, grid_bribery_fraud_corruption, grid_pep, grid_adverse_media_other_crimes, grid_adverse_media_reputational_risk, grid_legal]
+          );
           return res.status(200).json({ success: true, message: "Successfully saved data", data: result.rows});
         } catch (error) {
           return res.status(409).json({ success: false,  message: error.message, data: "couldnt save data"});
@@ -1198,7 +1296,6 @@ export const getOrbisGridData = async (req, res) => {
 
 
 export const getGridDataOrganizationWithId = async (req, res) => {
-  console.log(" Entered controller of getGridDataOrganizationWithId");
 
   // Ensure token is valid before making request
   await ensureValidToken();
@@ -1271,7 +1368,6 @@ const categorization = (alertEntity) => {
     legal: []
   };
   alertEntity.event.forEach(event => {
-    console.log("event", event.category.categoryCode)
     const entityData = {
         entityName: alertEntity.entityName,
         matchScore: alertEntity.matchScore,
@@ -1362,3 +1458,77 @@ export const getGridDataPersonnelWithId = async (req, res) => {
       return res.status(500).json({ error: 'Internal server error.', details: error.message });
   }
 };
+
+
+export const getOrbisNews = async (req, res) => {
+    const { bvdId, sessionId, ensId} = req.query;
+
+    const endpoint = "https://api.bvdinfo.com/v1/orbis/news/data";
+    const date = new Date().toISOString().split("T")[0];
+    console.log("daate:", date)
+    const query = {
+        "WHERE": [
+            {"BvDID": [bvdId]},
+            {"SentimentsScore": ["Negative"]},
+            {"Date": {"from": "2020-01-01", "to": date}}
+        ],
+        "SELECT": [
+            "TITLE",
+            "DATE",
+            "ARTICLE",
+            "QUOTED_COMPANY_NAME",
+            "TOPIC",
+            "SOURCE",
+            "PUBLICATION"
+        ],
+        "ORDERBY":{"DESC": "DATE"}
+    }
+
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+            'ApiToken': '1YJ4f2b401471bb0413aa2cfbe1243fa2c61'
+        };
+
+        const response1 = await axios.get(endpoint, {
+            params: { QUERY: JSON.stringify(query) },
+            headers: headers
+        });
+
+
+
+        // const response = matchcompaniesresponse;
+
+        if (response1.status === 200) {
+            const data = response1.data.Data
+//            console.log("length of article:", data.length, data)
+            let formattedResponse = Array.isArray(data) && data.length > 0
+                ? JSON.stringify(
+                    data
+                        .filter(item => item.DATE) // Ensure Date exists
+                        .sort((a, b) => new Date(b.DATE) - new Date(a.DATE)) // Sort by Date descending
+                        .slice(0, 20) // Limit to top 20 articles
+                        .map(item => ({
+                            ...item,
+                            ARTICLE: item.ARTICLE ? item.ARTICLE.replace(/<[^>]*>/g, '') : '' // Remove HTML tags
+                        })),
+                    null,
+                    2 // Pretty-print JSON
+                )
+                : null;
+//              console.log("No of articles:", formattedResponse ? JSON.parse(formattedResponse).length : 0);
+//              console.log("Articles:", formattedResponse ? JSON.parse(formattedResponse) : null);
+            let response = {
+                            orbis_news: formattedResponse || null
+                          };
+            const tableName = "external_supplier_data";
+            const interted_response = await updateTable(tableName, response, ensId, sessionId);
+            return res.status(200).json({ success: true, message: "Successfully saved data", data: interted_response});
+        } else {
+            return res.status(response1.status).json({ error: 'API request failed.', details: response1.data });
+        }
+    } catch (error) {
+        console.error('Error fetching data from Orbis API:', error);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+  };

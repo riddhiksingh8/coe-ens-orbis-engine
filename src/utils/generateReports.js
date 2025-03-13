@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import {
   AlignmentType,
   BorderStyle,
-  ImageRun,
   Paragraph,
   patchDocument,
   PatchType,
@@ -86,6 +85,7 @@ const createCell = (
 ) => {
   return new TableCell({
     verticalAlign: 'center',
+
     children: [
       new Paragraph({
         alignment,
@@ -143,10 +143,6 @@ const createNoHitsTable = (text = '') => {
               children: [
                 new Paragraph({
                   alignment: 'center',
-                  // spacing: {
-                  //   after: 100,
-                  //   before: 100,
-                  // },
                   children: [
                     new TextRun({
                       text: text
@@ -214,6 +210,7 @@ const createFindingsInnerTable = (findings) => {
 
               children: [
                 new Paragraph({}),
+                new Paragraph({}),
                 new Table({
                   width: { size: 100, type: WidthType.PERCENTAGE },
                   rows: [
@@ -247,6 +244,7 @@ const createFindingsInnerTable = (findings) => {
                     }),
                   ],
                 }),
+                new Paragraph({}),
                 new Paragraph({}),
               ],
             }),
@@ -371,6 +369,12 @@ export const generateReport = async (payload) => {
         inner_title: 'Cyber Security Indicators',
         data: payload.cyb_findings ? payload.cyb_data : [],
       },
+      financial_findings: {
+        title: `${payload.name} (Self)`,
+        rating: payload.financial_rating,
+        inner_title: 'Financial Indicators',
+        data: payload.financial_findings ? payload.financial_data : [],
+      },
       esg_findings: {
         title: `${payload.name} (Self)`,
         rating: payload.esg_rating,
@@ -379,36 +383,17 @@ export const generateReport = async (payload) => {
       },
     };
 
-    console.log('Data:', data);
     const doc = await patchDocument({
       outputType: 'nodebuffer',
       data: fs.readFileSync(TEMPLATE_PATH),
       patches: {
-        title: {
-          type: PatchType.PARAGRAPH,
-          children: [
-            new TextRun(data.name),
-            new ImageRun({
-              type: 'png',
-              data: fs.readFileSync('src/images/titleBackground.png'),
-              transformation: { width: 500, height: 400 },
-              floating: {
-                behindDocument: true,
-                horizontalPosition: {
-                  relative: 'column',
-                  align: 'left',
-                },
-                verticalPosition: {
-                  offset: 705789,
-                },
-              },
-            }),
-          ],
-        },
+        title: createTextRun({
+          text: data.name,
+        }),
         created_date: {
           type: PatchType.PARAGRAPH,
           children: [
-            new TextRun({ text: `${day}`, bold: true }), // Day (bold)
+            new TextRun({ text: `${day}` }), // Day (bold)
             new TextRun({ text: ordinalSuffix, superScript: true }), // Ordinal suffix (superscript)
             new TextRun({ text: ` ${month} ${year}` }), // Month and year
           ],
@@ -729,25 +714,14 @@ export const generateReport = async (payload) => {
             ? data.sape_data.map(createFindingsTable).flat()
             : createNoHitsTable('SANCTIONS'),
         },
-        pep_findings: {
-          type: PatchType.DOCUMENT,
-          children: data.pep_findings
-            ? data.pep_data.map(createFindingsTable).flat()
-            : createNoHitsTable('PeP'),
-        },
 
         antiBribery_findings: {
           type: PatchType.DOCUMENT,
           children: data.bribery_findings
             ? data.bribery_data.map(createFindingsTable).flat()
-            : createNoHitsTable('ANTI BRIBERY'),
+            : createNoHitsTable('ANTI-BRIBERY AND ANTI-CORRUPTION'),
         },
-        antiCorruption_findings: {
-          type: PatchType.DOCUMENT,
-          children: data.corruption_findings
-            ? data.corruption_data.map(createFindingsTable).flat()
-            : createNoHitsTable('ANTI CORRUPTION'),
-        },
+
         government_ownership_and_political_affiliations_findings: {
           type: PatchType.DOCUMENT,
           children: data.sown_findings
@@ -756,11 +730,13 @@ export const generateReport = async (payload) => {
                 'GOVERNMENT OWNERSHIP AND POLITICAL AFFILIATIONS',
               ),
         },
+
         financial_indicators_findings: {
           type: PatchType.DOCUMENT,
-          children: data.financial_findings
-            ? data.financial_data.map(createFindingsTable).flat()
-            : createNoHitsTable('FINANCIALS'),
+          children:
+            data.financial_findings.data.length > 0
+              ? createFindingsInnerTable(data.financial_findings)
+              : createNoHitsTable('FINANCIALS'),
         },
         bankruptcy_findings: {
           type: PatchType.DOCUMENT,
@@ -813,25 +789,18 @@ export const generateReport = async (payload) => {
 
     topdf.convert(docxPath, pdfPath);
 
-    // Upload DOCX to Azure
-    const docxUrl = await uploadToAzure(
-      docxPath,
-      `${data.ens_id}/${fileName}.docx`,
-      data.session_id,
-    );
-
-    // Upload PDF to Azure
-    const pdfUrl = await uploadToAzure(
-      pdfPath,
-      `${data.ens_id}/${fileName}.pdf`,
-      data.session_id,
-    );
+    await Promise.all([
+      uploadToAzure(
+        docxPath,
+        `${data.ens_id}/${fileName}.docx`,
+        data.session_id,
+      ),
+      uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
+    ]);
 
     // Cleanup local files after upload
     fs.unlinkSync(docxPath);
     fs.unlinkSync(pdfPath);
-
-    return { docxUrl, pdfUrl };
   } catch (error) {
     throw new Error(`Error generating report: ${error.message}`);
   }

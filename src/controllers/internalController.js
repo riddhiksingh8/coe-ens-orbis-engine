@@ -15,24 +15,13 @@ export const insertInternalOrgData = async (req, res, next) => {
 
 export const reportGenerationNode = async (req, res, next) => {
   try {
-    const urls = await generateReport(req.body);
+    await generateReport(req.body);
 
     return handleResponse(res, 200, {
       data: req.body,
-      urls,
       message: 'Report generated successfully',
     });
   } catch (err) {
     next(err);
   }
-
-  // const urls = await generateReport(req.body);
-
-  // console.log('Request Body', req.body);
-  // // Logic for generating reports
-  // return handleResponse(res, 200, {
-  //   data: req.body,
-  //   urls,
-  //   message: 'Report generated successfully',
-  // });
 };
