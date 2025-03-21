@@ -1116,8 +1116,8 @@ export const generateReport = async (payload) => {
 
     const fileName = `${data.name}`;
 
-    const docxPath = path.join(ROOT_DIR, 'src', `${fileName}.docx`);
-    const pdfPath = path.join(ROOT_DIR, 'src', `${fileName}.pdf`);
+    const docxPath = path.join(ROOT_DIR, `${fileName}.docx`);
+    const pdfPath = path.join(ROOT_DIR, `${fileName}.pdf`);
 
     fs.writeFileSync(docxPath, doc);
 
