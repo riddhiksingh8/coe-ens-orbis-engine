@@ -6,5 +6,9 @@ curl -fsSL https://nodejs.org/dist/latest-v20.x/node-v20.x.x-linux-x64.tar.xz | 
 # Set Node.js binary path
 export PATH="$PWD/node-v20.x.x-linux-x64/bin:$PATH"
 
+# Install unoconv and LibreOffice
+sudo apt update
+sudo apt install -y unoconv libreoffice
+
 # Install dependencies
 npm install
