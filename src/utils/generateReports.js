@@ -18,9 +18,11 @@ import * as cheerio from 'cheerio';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 import { getOrdinalSuffix, getRiskColor } from './helpers.js';
+import path from 'path';
 
 let template = 'aramco_template.docx';
 let links = [];
+const ROOT_DIR = path.resolve();
 
 // Azure Storage Credentials
 const { BLOB_STORAGE__CONNECTION_STRING } = process.env;
@@ -48,9 +50,9 @@ const uploadBufferToAzure = async (data, fileName, session_id) => {
   try {
     const containerClient = blobServiceClient.getContainerClient(session_id);
     const blobClient = containerClient.getBlockBlobClient(fileName);
- 
+
     await blobClient.upload(data, data.length);
- 
+
     return blobClient.url;
   } catch (error) {
     console.error(`Error uploading ${fileName} to Azure:`, error);
@@ -673,7 +675,7 @@ export const generateReport = async (payload) => {
       data.riskData.pop();
     }
 
-    const TEMPLATE_PATH = `src/template/${template}`;
+    const TEMPLATE_PATH = path.join(ROOT_DIR, 'src', 'template', template);
     const doc = await patchDocument({
       outputType: 'nodebuffer',
       data: fs.readFileSync(TEMPLATE_PATH),
@@ -1112,36 +1114,35 @@ export const generateReport = async (payload) => {
       },
     });
 
-    // const fileName = `${data.name}`;
+    const fileName = `${data.name}`;
 
-    // const docxPath = `src/${fileName}.docx`;
-    // const pdfPath = `src/${fileName}.pdf`;
+    const docxPath = path.join(ROOT_DIR, 'src', `${fileName}.docx`);
+    const pdfPath = path.join(ROOT_DIR, 'src', `${fileName}.pdf`);
 
-    // fs.writeFileSync(docxPath, doc);
+    fs.writeFileSync(docxPath, doc);
 
-    // topdf.convert(docxPath, pdfPath);
+    topdf.convert(docxPath, pdfPath);
 
-    // await Promise.all([
-    //   uploadToAzure(
-    //     docxPath,
-    //     `${data.ens_id}/${fileName}.docx`,
-    //     data.session_id,
-    //   ),
-    //   uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
-    // ]);
+    await Promise.all([
+      uploadToAzure(
+        docxPath,
+        `${data.ens_id}/${fileName}.docx`,
+        data.session_id,
+      ),
+      uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
+    ]);
 
-    // // Cleanup local files after upload
-    // await Promise.all([
-    //   fs.promises.unlink(docxPath),
-    //   fs.promises.unlink(pdfPath),
-    // ]);
+    // Cleanup local files after upload
+    await Promise.all([
+      fs.promises.unlink(docxPath),
+      fs.promises.unlink(pdfPath),
+    ]);
 
-    await uploadBufferToAzure(
-      doc,
-      `${data.ens_id}/${data.name}.docx`,
-      data.session_id,
-    );
- 
+    // await uploadBufferToAzure(
+    //   doc,
+    //   `${data.ens_id}/${data.name}.docx`,
+    //   data.session_id,
+    // );
   } catch (error) {
     throw new Error(`Error generating report: ${error.message}`);
   }
