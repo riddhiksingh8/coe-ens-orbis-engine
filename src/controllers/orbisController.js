@@ -10,7 +10,6 @@ import axios from 'axios';
 import fs from 'fs/promises';
 
 import {OrbisGridLogin} from '../utils/auth.js';
-import fs from "fs";
  
  const matchcompaniesresponse = JSON.parse(
    fs.readFileSync(new URL("../dummydata/matchcompanies.json", import.meta.url))
