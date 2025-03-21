@@ -1119,11 +1119,11 @@ export const generateReport = async (payload) => {
     const docxPath = path.join(ROOT_DIR, `${fileName}.docx`);
 
     console.log({ docxPath, root: ROOT_DIR });
-    // const pdfPath = path.join(ROOT_DIR, `${fileName}.pdf`);
+    const pdfPath = path.join(ROOT_DIR, `${fileName}.pdf`);
 
     fs.writeFileSync(docxPath, doc);
 
-    // topdf.convert(docxPath, pdfPath);
+    topdf.convert(docxPath, pdfPath);
 
     await Promise.all([
       uploadToAzure(
@@ -1131,13 +1131,13 @@ export const generateReport = async (payload) => {
         `${data.ens_id}/${fileName}.docx`,
         data.session_id,
       ),
-      // uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
+      uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
     ]);
 
     // Cleanup local files after upload
     await Promise.all([
       fs.promises.unlink(docxPath),
-      // fs.promises.unlink(pdfPath),
+      fs.promises.unlink(pdfPath),
     ]);
 
     // await uploadBufferToAzure(
