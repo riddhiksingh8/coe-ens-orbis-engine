@@ -58,13 +58,13 @@ router.get('/companies', getCurrentUser, rateLimitMiddleware, getOrbisCompanyDat
 router.get('/news', getCurrentUser, validateId, rateLimitMiddleware, getOrbisNews); //In-use
 
 // For getting the grid info from orbis[grid] for Companies 
-router.get('/orbisgrid/companies', validateId, rateLimitMiddleware, getOrbisGridData);
+router.get('/orbisgrid/companies', getCurrentUser, validateId, rateLimitMiddleware, getOrbisGridData);
 
 // For getting the grid info from gridendpoint for Comany [From Management Grid] 
 router.get('/grid/companies', getCurrentUser, validateGrid, getGridData)
 
 // For getting the grid info from gridendpoint for Person [From Management Grid] [using table : grid_management for saving management data]
-router.get('/grid/personnels', validateGridPersonnel, rateLimitMiddleware, getGridDataPersonnels);
+router.get('/grid/personnels',getCurrentUser, validateGridPersonnel, rateLimitMiddleware, getGridDataPersonnels);
 
 // For getting grid info for unique\ Company by using bvdId []
 router.get('/grid/id/companies', getCurrentUser, validateId, rateLimitMiddleware, getGridDataOrganizationWithId);

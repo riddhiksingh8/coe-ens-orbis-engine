@@ -34,10 +34,10 @@ export function getOrdinalSuffix(day) {
 
 export const getRiskColor = (rating) => {
   if (rating.toLowerCase() === 'high')
-    return { background: 'FF0000', color: '000000' }; // Red
+    return { background: 'FF0000', color: 'FFFFFF' }; // Red
   if (rating.toLowerCase() === 'medium')
     return { background: 'FFE600', color: '000000' }; // Yellow
   if (rating.toLowerCase() === 'low')
-    return { background: '00FF00', color: '000000' }; // Green
+    return { background: '2DB757', color: '000000' }; // Green
   return { background: 'F2F2F2', color: '000000' }; // Default white
 };

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import {
   AlignmentType,
   BorderStyle,
+  ExternalHyperlink,
   Paragraph,
   patchDocument,
   PatchType,
@@ -12,11 +13,14 @@ import {
   WidthType,
 } from 'docx';
 import topdf from 'docx2pdf-converter';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 import { getOrdinalSuffix, getRiskColor } from './helpers.js';
 
-const TEMPLATE_PATH = 'src/template/aramco_template.docx';
+let template = 'aramco_template.docx';
+let links = [];
 
 // Azure Storage Credentials
 const { BLOB_STORAGE__CONNECTION_STRING } = process.env;
@@ -81,11 +85,11 @@ const createCell = (
     alignment = 'center',
     bold = true,
     columnSpan = 1,
+    ...rest
   } = {},
 ) => {
   return new TableCell({
     verticalAlign: 'center',
-
     children: [
       new Paragraph({
         alignment,
@@ -94,29 +98,57 @@ const createCell = (
     ],
     shading: { fill: background },
     columnSpan: columnSpan || 1,
+    ...rest,
   });
 };
 
 const highlightRating = (rating) => ({
   type: PatchType.DOCUMENT,
   children: [
-    new Paragraph({
-      alignment: 'center',
-      shading: { fill: getRiskColor(rating).background },
-      spacing: {
-        line: 180,
+    new Table({
+      width: {
+        size: 15,
+        type: WidthType.PERCENTAGE,
       },
-      children: [
-        new TextRun({
-          break: 1,
-        }),
-        new TextRun({
-          text: `${rating}`,
-          color: getRiskColor(rating).color,
-          bold: true,
-        }),
-        new TextRun({
-          break: 1,
+      borders: {
+        top: {
+          style: BorderStyle.NONE,
+        },
+        bottom: {
+          style: BorderStyle.NONE,
+        },
+        left: {
+          style: BorderStyle.NONE,
+        },
+        right: {
+          style: BorderStyle.NONE,
+        },
+      },
+
+      rows: [
+        new TableRow({
+          height: { rule: 'atLeast', value: 550 },
+
+          children: [
+            new TableCell({
+              verticalAlign: 'center',
+              shading: {
+                fill: getRiskColor(rating).background,
+              },
+              children: [
+                new Paragraph({
+                  alignment: 'center',
+                  children: [
+                    new TextRun({
+                      text: `${rating}`,
+                      color: getRiskColor(rating).color,
+                      bold: true,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
         }),
       ],
     }),
@@ -159,6 +191,7 @@ const createNoHitsTable = (text = '') => {
         }),
       ],
     }),
+    new Paragraph({}),
   ];
 };
 
@@ -176,17 +209,34 @@ const createFindingsInnerTable = (findings) => {
             createCell('Name & Relation', {
               background: 'f2f2f2',
               alignment: 'left',
+              width: {
+                size: 20,
+                type: WidthType.PERCENTAGE,
+              },
             }),
             createCell(findings.title, {
               background: 'ffffff',
               alignment: 'center',
               bold: false,
+              width: {
+                size: 50,
+                type: WidthType.PERCENTAGE,
+              },
             }),
-            createCell('Rating'),
+            createCell('Rating', {
+              width: {
+                size: 15,
+                type: WidthType.PERCENTAGE,
+              },
+            }),
             createCell(findings.rating, {
               background: 'ffffff',
               alignment: 'center',
               bold: false,
+              width: {
+                size: 15,
+                type: WidthType.PERCENTAGE,
+              },
             }),
           ],
         }),
@@ -209,17 +259,24 @@ const createFindingsInnerTable = (findings) => {
               columnSpan: 4,
 
               children: [
-                new Paragraph({}),
-                new Paragraph({}),
+                new Paragraph({
+                  children: [new TextRun({ break: 1 })],
+                }),
                 new Table({
                   width: { size: 100, type: WidthType.PERCENTAGE },
                   rows: [
                     new TableRow({
                       height: { rule: 'atLeast', value: 500 },
                       children: [
-                        createCell(findings.inner_title),
-                        createCell('Rating'),
-                        createCell('Notes'),
+                        createCell(findings.inner_title, {
+                          width: { size: 30, type: WidthType.PERCENTAGE },
+                        }),
+                        createCell('Rating', {
+                          width: { size: 15, type: WidthType.PERCENTAGE },
+                        }),
+                        createCell('Notes', {
+                          width: { size: 55, type: WidthType.PERCENTAGE },
+                        }),
                       ],
                     }),
 
@@ -230,22 +287,103 @@ const createFindingsInnerTable = (findings) => {
                           createCell(item.kpi_definition, {
                             background: 'ffffff',
                             bold: false,
+                            width: {
+                              size: 30,
+                              type: WidthType.PERCENTAGE,
+                            },
                           }),
                           createCell(item.kpi_rating, {
                             background: 'ffffff',
                             bold: false,
+                            width: {
+                              size: 15,
+                              type: WidthType.PERCENTAGE,
+                            },
                           }),
                           createCell(item.kpi_details, {
                             background: 'ffffff',
                             bold: false,
+                            width: {
+                              size: 55,
+                              type: WidthType.PERCENTAGE,
+                            },
                           }),
                         ],
                       });
                     }),
                   ],
                 }),
+
                 new Paragraph({}),
+
+                findings.inner_title === 'ESG Indicators' &&
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: 'Notes:',
+                        bold: true,
+                        break: 1,
+                        underline: true,
+                      }),
+                      new TextRun({
+                        text: '',
+                        break: 1,
+                      }),
+                      new TextRun({
+                        text: '',
+                        break: 1,
+                      }),
+                      new TextRun({
+                        text: 'ESG Ratings ',
+                        bold: true,
+                      }),
+                      new TextRun({
+                        text: '(if applicable):',
+                        bold: true,
+                      }),
+                      new TextRun({
+                        text: 'High/Weak : 0-29; Medium/Moderate: 30-49; Low/Robust:50-100',
+                        break: 1,
+                      }),
+                    ],
+                  }),
+
                 new Paragraph({}),
+                findings.inner_title === 'Cyber Security Indicators' &&
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: 'Notes:',
+                        bold: true,
+                        break: 1,
+                        underline: true,
+                      }),
+                      new TextRun({
+                        text: '',
+                        break: 1,
+                      }),
+                      new TextRun({
+                        text: '',
+                        break: 1,
+                      }),
+                      new TextRun({
+                        text: 'Cyber Ratings ',
+                        bold: true,
+                      }),
+                      new TextRun({
+                        text: '(if applicable):',
+                        bold: true,
+                      }),
+                      new TextRun({
+                        text: 'High: <650; Medium: 650-750; Low: 750 - 900',
+                        break: 1,
+                      }),
+                    ],
+                  }),
+                new Paragraph({}),
+
+                findings.inner_title === 'Financial Indicators' &&
+                  new Paragraph({}),
               ],
             }),
           ],
@@ -260,35 +398,51 @@ const createFindingsTable = (findings) => {
   return [
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
-      alignment: 'center',
 
       rows: [
         // Header row
         new TableRow({
           height: { rule: 'atLeast', value: 500 },
+          // cantSplit: true,
           children: [
             createCell('Name & Relation', {
               background: 'f2f2f2',
               alignment: 'left',
               bold: true,
+              width: {
+                size: 20,
+                type: WidthType.PERCENTAGE,
+              },
             }),
             createCell(findings.kpi_definition, {
               background: 'ffffff',
               alignment: 'center',
               bold: false,
+              width: {
+                size: 50,
+                type: WidthType.PERCENTAGE,
+              },
             }),
-            createCell('Rating'),
+            createCell('Rating', {
+              width: {
+                size: 15,
+                type: WidthType.PERCENTAGE,
+              },
+            }),
             createCell(findings.kpi_rating, {
               background: 'ffffff',
               alignment: 'center',
               bold: false,
+              width: {
+                size: 15,
+                type: WidthType.PERCENTAGE,
+              },
             }),
           ],
         }),
         // Findings row (merged across 4 columns)
         new TableRow({
           height: { rule: 'atLeast', value: 500 },
-          // borders: tableBorders,
           children: [
             createCell('Findings', {
               columnSpan: 4,
@@ -302,19 +456,61 @@ const createFindingsTable = (findings) => {
           height: { rule: 'atLeast', value: 500 },
           children: [
             new TableCell({
-              children: findings.kpi_details
-                .trim()
-                .split(/\n+/)
-                .map(
-                  (text) =>
-                    new Paragraph({
+              children: [
+                new Paragraph({}),
+                ...findings.kpi_details
+                  .trim()
+                  .split(/\n+/)
+                  .map((text) => {
+                    const urlRegex = /(https?:\/\/[^\s]+)/;
+
+                    const match = text.match(urlRegex);
+                    let url = match ? match[0] : null;
+                    let textAfterUrl = '';
+
+                    if (url) {
+                      // Extract text after the URL
+                      textAfterUrl = text
+                        .replace(/.*https?:\/\/[^\s]+/, '')
+                        .trim();
+                    }
+
+                    if (url && url.includes('?')) {
+                      url = null;
+                    }
+
+                    return new Paragraph({
                       spacing: {
                         after: 50,
                         before: 50,
                       },
-                      children: [new TextRun({ text, bold: false })],
-                    }),
-                ),
+                      children: [
+                        url
+                          ? new ExternalHyperlink({
+                              children: [
+                                new TextRun({ text: '', break: 1 }),
+                                new TextRun({
+                                  text: 'Source:',
+                                  bold: true,
+                                }),
+                                new TextRun({ text: '', break: 1 }),
+                                new TextRun({
+                                  text:
+                                    links.find((link) => link.url === url)
+                                      ?.title ?? 'Source Link',
+                                  style: 'Hyperlink',
+                                }),
+                                new TextRun({ text: ` ${textAfterUrl}` }),
+                                new TextRun({ text: '', break: 1 }),
+                              ],
+                              link: url,
+                            })
+                          : new TextRun({ text, bold: false }),
+                      ],
+                    });
+                  }),
+                new Paragraph({}),
+              ],
 
               shading: { fill: 'ffffff' },
               columnSpan: 4,
@@ -327,8 +523,42 @@ const createFindingsTable = (findings) => {
   ];
 };
 
+const processKpiDetails = (findings) => {
+  const lines = findings.kpi_details?.trim().split(/\n+/);
+  const urls = lines
+    .map((text) => {
+      const urlRegex = /(https?:\/\/[^\s]+)/;
+      const match = text.match(urlRegex);
+      return match ? match[0] : null;
+    })
+    .filter((url) => url);
+  return urls;
+};
+
+const getPageTitle = async (url) => {
+  try {
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    let title = $('meta[property="og:title"]').attr('content')?.trim();
+
+    if (!title) {
+      title = $('title').text().trim();
+    }
+
+    return title || 'Source Link';
+  } catch (error) {
+    console.error('Error fetching title:', error.message);
+    return 'Source Link';
+  }
+};
+
 export const generateReport = async (payload) => {
   try {
+    let urls = [];
+    links = [];
+    const disableRegulatoryAndLegal = !!payload['disable-regulator-and-legal'];
+
     const data = {
       ...payload,
       riskData: [
@@ -343,11 +573,11 @@ export const generateReport = async (payload) => {
         },
         { area: 'Financial Indicators', rating: payload.financial_rating },
         { area: 'Other Adverse Media', rating: payload.adv_rating },
-        { area: 'Cyber Security', rating: payload.cyber_rating },
         {
-          area: 'ESG',
-          rating: payload.esg_rating,
+          area: 'Additional Indicators',
+          rating: payload.additional_indicators_rating,
         },
+
         {
           area: 'Regulatory & Legal',
           rating: payload.regulatory_and_legal_rating,
@@ -359,15 +589,20 @@ export const generateReport = async (payload) => {
         governmentOwnershipAndPoliticalAffiliations: payload.gov_summary,
         financialIndicators: payload.financial_summary,
         otherAdverseMedia: payload.adv_summary,
-        cyberSecurity: payload.cyber_summary,
-        esg: payload.esg_summary,
-        regulatoryAndLegal: payload.ral_summary,
+        additional_indicators: payload.additional_indicators_summary,
+        ...(!disableRegulatoryAndLegal && {
+          regulatoryAndLegal: payload.ral_summary,
+        }),
       },
       cyberSecurity_findings: {
         title: `${payload.name} (Self)`,
         rating: payload.cyber_rating,
         inner_title: 'Cyber Security Indicators',
-        data: payload.cyb_findings ? payload.cyb_data : [],
+        data: payload.additional_indicators_findings
+          ? payload.additional_indicators_data.filter(
+              (item) => item.kpi_area === 'CYB',
+            )
+          : [],
       },
       financial_findings: {
         title: `${payload.name} (Self)`,
@@ -379,10 +614,52 @@ export const generateReport = async (payload) => {
         title: `${payload.name} (Self)`,
         rating: payload.esg_rating,
         inner_title: 'ESG Indicators',
-        data: payload.esg_findings ? payload.esg_data : [],
+        data: payload.additional_indicators_findings
+          ? payload.additional_indicators_data.filter(
+              (item) => item.kpi_area === 'ESG',
+            )
+          : [],
+      },
+      web_findings: {
+        data: payload.additional_indicators_findings
+          ? payload.additional_indicators_data.filter(
+              (item) => item.kpi_area === 'WEB',
+            )
+          : [],
       },
     };
 
+    const processUrlProps = [
+      'sape_data',
+      'reg_data',
+      'leg_data',
+      'bribery_data',
+      'sown_data',
+      'adv_data',
+      'backruptcy_data',
+    ];
+
+    for (const prop of processUrlProps) {
+      if (data[prop]) {
+        data[prop].map((item) => {
+          urls = [...urls, ...processKpiDetails(item)];
+        });
+      }
+    }
+
+    links = await Promise.all(
+      urls.map(async (url) => {
+        const title = await getPageTitle(url);
+        return { url, title };
+      }),
+    );
+
+    if (disableRegulatoryAndLegal) {
+      template = 'aramco_template-no-regulatory-legal.docx';
+      data.riskData.pop();
+    }
+
+    const TEMPLATE_PATH = `src/template/${template}`;
     const doc = await patchDocument({
       outputType: 'nodebuffer',
       data: fs.readFileSync(TEMPLATE_PATH),
@@ -424,9 +701,20 @@ export const generateReport = async (payload) => {
         company_national_identifier: createTextRun({
           text: data.national_id,
         }),
-        company_alias: createTextRun({
-          text: data.alias,
-        }),
+        company_alias: {
+          type: PatchType.DOCUMENT,
+          children: [
+            new Paragraph({}),
+            ...data.alias.split(/\n+/).map(
+              (text) =>
+                new Paragraph({
+                  children: [new TextRun({ text, break: 1 })],
+                }),
+            ),
+            new Paragraph({}),
+          ],
+        },
+
         company_incorporation_date: createTextRun({
           text: data.incorporation_date,
         }),
@@ -440,15 +728,23 @@ export const generateReport = async (payload) => {
 
         shareholders: {
           type: PatchType.DOCUMENT,
-          children: data.shareholders
-            .split('\n')
-            .map((shareholder) => new Paragraph(shareholder)),
+          children: [
+            new Paragraph({}),
+            ...data.shareholders
+              .split('\n')
+              .map((shareholder) => new Paragraph(shareholder)),
+            new Paragraph({}),
+          ],
         },
         key_executives: {
           type: PatchType.DOCUMENT,
-          children: data.key_exec
-            .split('\n')
-            .map((executive) => new Paragraph(executive)),
+          children: [
+            new Paragraph({}),
+            ...data.key_exec
+              .split('\n')
+              .map((executive) => new Paragraph(executive)),
+            new Paragraph({}),
+          ],
         },
         company_revenue: createTextRun({
           text: data.revenue,
@@ -482,7 +778,7 @@ export const generateReport = async (payload) => {
                             new TextRun({
                               text: 'OVERALL RISK RATING',
                               bold: true,
-                              size: 24,
+                              size: 28,
                             }),
                           ],
                         }),
@@ -498,8 +794,9 @@ export const generateReport = async (payload) => {
                             new TextRun({
                               text: data.risk_level,
                               bold: true,
-                              size: 24,
+                              size: 28,
                               color: getRiskColor(data.risk_level).color,
+                              allCaps: true,
                             }),
                           ],
                         }),
@@ -593,7 +890,16 @@ export const generateReport = async (payload) => {
                       children: [
                         new TableCell({
                           verticalAlign: 'center',
-                          children: [new Paragraph(risk.area)],
+                          children: [
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text: risk.area,
+                                  font: 'EYInterstate Light',
+                                }),
+                              ],
+                            }),
+                          ],
                           borders,
                         }),
                         new TableCell({
@@ -604,6 +910,8 @@ export const generateReport = async (payload) => {
                                 new TextRun({
                                   text: risk.rating,
                                   color: getRiskColor(risk.rating).color,
+                                  font: 'EYInterstate Light',
+                                  size: 20,
                                 }),
                               ],
                               alignment: AlignmentType.CENTER,
@@ -698,8 +1006,22 @@ export const generateReport = async (payload) => {
         d_rating: highlightRating(data.riskData[3].rating),
         e_rating: highlightRating(data.riskData[4].rating),
         f_rating: highlightRating(data.riskData[5].rating),
-        g_rating: highlightRating(data.riskData[6].rating),
-        h_rating: highlightRating(data.riskData[7].rating),
+
+        ...(!disableRegulatoryAndLegal && {
+          g_rating: highlightRating(data.riskData[6].rating),
+          regularity_findings: {
+            type: PatchType.DOCUMENT,
+            children: data.reg_findings
+              ? data.reg_data.map(createFindingsTable).flat()
+              : createNoHitsTable('REGULATORY'),
+          },
+          legal_findings: {
+            type: PatchType.DOCUMENT,
+            children: data.bankruptcy_findings
+              ? data.leg_data.map(createFindingsTable).flat()
+              : createNoHitsTable('LEGAL'),
+          },
+        }),
 
         // Utils
         page_break: {
@@ -751,18 +1073,14 @@ export const generateReport = async (payload) => {
             : createNoHitsTable('OTHER ADVERSE MEDIA'),
         },
 
-        regularity_findings: {
+        web_findings: {
           type: PatchType.DOCUMENT,
-          children: data.reg_findings
-            ? data.reg_data.map(createFindingsTable).flat()
-            : createNoHitsTable('REGULATORY'),
+          children:
+            data.web_findings.data.length > 0
+              ? data.web_findings.data.map(createFindingsTable).flat()
+              : [],
         },
-        legal_findings: {
-          type: PatchType.DOCUMENT,
-          children: data.bankruptcy_findings
-            ? data.leg_data.map(createFindingsTable).flat()
-            : createNoHitsTable('LEGAL'),
-        },
+
         cyberSecurity_findings: {
           type: PatchType.DOCUMENT,
           children:
@@ -799,8 +1117,10 @@ export const generateReport = async (payload) => {
     ]);
 
     // Cleanup local files after upload
-    fs.unlinkSync(docxPath);
-    fs.unlinkSync(pdfPath);
+    await Promise.all([
+      fs.promises.unlink(docxPath),
+      fs.promises.unlink(pdfPath),
+    ]);
   } catch (error) {
     throw new Error(`Error generating report: ${error.message}`);
   }
