@@ -48,6 +48,19 @@ const uploadToAzure = async (filePath, fileName, session_id) => {
   }
 };
 
+const uploadBufferToAzure = async (data, fileName, session_id) => {
+  try {
+    const containerClient = blobServiceClient.getContainerClient(session_id);
+    const blobClient = containerClient.getBlockBlobClient(fileName);
+
+    await blobClient.upload(data, data.length);
+
+    return blobClient.url;
+  } catch (error) {
+    console.error(`Error uploading ${fileName} to Azure:`, error);
+  }
+};
+
 const borders = {
   top: {
     style: BorderStyle.SINGLE,
@@ -1126,29 +1139,35 @@ export const generateReport = async (payload) => {
       },
     });
 
-    const fileName = `${data.name}`;
+    // const fileName = `${data.name}`;
 
-    const docxPath = `src/${fileName}.docx`;
-    const pdfPath = `src/${fileName}.pdf`;
+    // const docxPath = `src/${fileName}.docx`;
+    // const pdfPath = `src/${fileName}.pdf`;
 
-    fs.writeFileSync(docxPath, doc);
+    // fs.writeFileSync(docxPath, doc);
 
-    topdf.convert(docxPath, pdfPath);
+    // topdf.convert(docxPath, pdfPath);
 
-    await Promise.all([
-      uploadToAzure(
-        docxPath,
-        `${data.ens_id}/${fileName}.docx`,
-        data.session_id
-      ),
-      uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
-    ]);
+    // await Promise.all([
+    //   uploadToAzure(
+    //     docxPath,
+    //     `${data.ens_id}/${fileName}.docx`,
+    //     data.session_id
+    //   ),
+    //   uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
+    // ]);
 
-    // Cleanup local files after upload
-    await Promise.all([
-      fs.promises.unlink(docxPath),
-      fs.promises.unlink(pdfPath),
-    ]);
+    // // Cleanup local files after upload
+    // await Promise.all([
+    //   fs.promises.unlink(docxPath),
+    //   fs.promises.unlink(pdfPath),
+    // ]);
+
+    await uploadBufferToAzure(
+      doc,
+      `${data.ens_id}/${data.name}.docx`,
+      data.session_id,
+    );
 
     await handleReportStatus('COMPLETED', data);
   } catch (error) {
