@@ -26,3 +26,5 @@ build/
 # Temporary files
 *.tmp
 *.temp
+.env copy
+.env copy 2

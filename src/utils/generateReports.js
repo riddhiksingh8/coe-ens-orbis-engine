@@ -17,19 +17,21 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 import { BlobServiceClient } from '@azure/storage-blob';
+
 import { getOrdinalSuffix, getRiskColor } from './helpers.js';
-import path from 'path';
+import { emitReportStatus } from './socketUtil.js';
+import { updateTable } from './db_utils.js';
 
 let template = 'aramco_template.docx';
 let links = [];
-const ROOT_DIR = path.resolve();
+const kpi_codes = ['NWS1A', 'ONF1A'];
 
 // Azure Storage Credentials
 const { BLOB_STORAGE__CONNECTION_STRING } = process.env;
 
 // Initialize Azure Blob Service Client
 const blobServiceClient = BlobServiceClient.fromConnectionString(
-  BLOB_STORAGE__CONNECTION_STRING,
+  BLOB_STORAGE__CONNECTION_STRING
 );
 
 // Function to upload a file to Azure Blob Storage
@@ -45,26 +47,6 @@ const uploadToAzure = async (filePath, fileName, session_id) => {
     console.error(`Error uploading ${fileName} to Azure:`, error);
   }
 };
-
-const uploadBufferToAzure = async (data, fileName, session_id) => {
-  try {
-    const containerClient = blobServiceClient.getContainerClient(session_id);
-    const blobClient = containerClient.getBlockBlobClient(fileName);
-
-    await blobClient.upload(data, data.length);
-
-    return blobClient.url;
-  } catch (error) {
-    console.error(`Error uploading ${fileName} to Azure:`, error);
-  }
-};
-
-const date = new Date();
-const day = date.getDate();
-const month = date.toLocaleString('en-US', { month: 'long' });
-const year = date.getFullYear();
-
-const ordinalSuffix = getOrdinalSuffix(day);
 
 const borders = {
   top: {
@@ -102,15 +84,18 @@ const createCell = (
     bold = true,
     columnSpan = 1,
     ...rest
-  } = {},
+  } = {}
 ) => {
   return new TableCell({
     verticalAlign: 'center',
     children: [
-      new Paragraph({
-        alignment,
-        children: [new TextRun({ text, bold, size: 20 })],
-      }),
+      ...text.split(/\n+/).map(
+        (text) =>
+          new Paragraph({
+            alignment,
+            children: [new TextRun({ text, bold, size: 20 })],
+          })
+      ),
     ],
     shading: { fill: background },
     columnSpan: columnSpan || 1,
@@ -329,6 +314,14 @@ const createFindingsInnerTable = (findings) => {
                     }),
                   ],
                 }),
+                new Paragraph({}),
+
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: 'Source:', bold: true }),
+                    new TextRun({ text: ' EY Network Alliance Databases' }),
+                  ],
+                }),
 
                 new Paragraph({}),
 
@@ -526,6 +519,16 @@ const createFindingsTable = (findings) => {
                     });
                   }),
                 new Paragraph({}),
+                !kpi_codes.includes(findings.kpi_code) &&
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: '', break: 1 }),
+                      new TextRun({ text: 'Source:', bold: true }),
+                      new TextRun({ text: ' EY Network Alliance Databases' }),
+                      new TextRun({ text: '', break: 1 }),
+                    ],
+                  }),
+                new Paragraph({}),
               ],
 
               shading: { fill: 'ffffff' },
@@ -570,12 +573,13 @@ const getPageTitle = async (url) => {
 };
 
 export const generateReport = async (payload) => {
+  let data;
   try {
     let urls = [];
     links = [];
     const disableRegulatoryAndLegal = !!payload['disable-regulator-and-legal'];
 
-    const data = {
+    data = {
       ...payload,
       riskData: [
         { area: 'Sanctions', rating: payload.sanctions_rating },
@@ -616,7 +620,7 @@ export const generateReport = async (payload) => {
         inner_title: 'Cyber Security Indicators',
         data: payload.additional_indicators_findings
           ? payload.additional_indicators_data.filter(
-              (item) => item.kpi_area === 'CYB',
+              (item) => item.kpi_area === 'CYB'
             )
           : [],
       },
@@ -632,14 +636,14 @@ export const generateReport = async (payload) => {
         inner_title: 'ESG Indicators',
         data: payload.additional_indicators_findings
           ? payload.additional_indicators_data.filter(
-              (item) => item.kpi_area === 'ESG',
+              (item) => item.kpi_area === 'ESG'
             )
           : [],
       },
       web_findings: {
         data: payload.additional_indicators_findings
           ? payload.additional_indicators_data.filter(
-              (item) => item.kpi_area === 'WEB',
+              (item) => item.kpi_area === 'WEB'
             )
           : [],
       },
@@ -667,7 +671,7 @@ export const generateReport = async (payload) => {
       urls.map(async (url) => {
         const title = await getPageTitle(url);
         return { url, title };
-      }),
+      })
     );
 
     if (disableRegulatoryAndLegal) {
@@ -675,7 +679,15 @@ export const generateReport = async (payload) => {
       data.riskData.pop();
     }
 
-    const TEMPLATE_PATH = path.join(ROOT_DIR, 'src', 'template', template);
+    const TEMPLATE_PATH = `src/template/${template}`;
+
+    const date = new Date();
+    const day = date.getDate();
+    const month = date.toLocaleString('en-US', { month: 'long' });
+    const year = date.getFullYear();
+
+    const ordinalSuffix = getOrdinalSuffix(day);
+
     const doc = await patchDocument({
       outputType: 'nodebuffer',
       data: fs.readFileSync(TEMPLATE_PATH),
@@ -725,7 +737,7 @@ export const generateReport = async (payload) => {
               (text) =>
                 new Paragraph({
                   children: [new TextRun({ text, break: 1 })],
-                }),
+                })
             ),
             new Paragraph({}),
           ],
@@ -836,7 +848,7 @@ export const generateReport = async (payload) => {
             .split(/\n+/)
             .map(
               (text) =>
-                new Paragraph({ children: [new TextRun({ text, break: 1 })] }),
+                new Paragraph({ children: [new TextRun({ text, break: 1 })] })
             ),
         },
         risk_areas: {
@@ -939,7 +951,7 @@ export const generateReport = async (payload) => {
                           borders,
                         }),
                       ],
-                    }),
+                    })
                 ),
               ],
             }),
@@ -967,7 +979,7 @@ export const generateReport = async (payload) => {
                       new TextRun({
                         text: line,
                         break: index === 0 ? 0 : 1,
-                      }),
+                      })
                   ),
 
                 new TextRun({
@@ -1002,7 +1014,7 @@ export const generateReport = async (payload) => {
                           new TextRun({
                             text: line,
                             break: index === 0 ? 0 : 1,
-                          }),
+                          })
                       ),
 
                     new TextRun({
@@ -1013,7 +1025,7 @@ export const generateReport = async (payload) => {
               }),
             },
           }),
-          {},
+          {}
         ),
 
         a_rating: highlightRating(data.riskData[0].rating),
@@ -1065,7 +1077,7 @@ export const generateReport = async (payload) => {
           children: data.sown_findings
             ? data.sown_data.map(createFindingsTable).flat()
             : createNoHitsTable(
-                'GOVERNMENT OWNERSHIP AND POLITICAL AFFILIATIONS',
+                'GOVERNMENT OWNERSHIP AND POLITICAL AFFILIATIONS'
               ),
         },
 
@@ -1114,37 +1126,48 @@ export const generateReport = async (payload) => {
       },
     });
 
-    // const fileName = `${data.name}`;
+    const fileName = `${data.name}`;
 
-    // const docxPath = path.join(ROOT_DIR, `${fileName}.docx`);
+    const docxPath = `src/${fileName}.docx`;
+    const pdfPath = `src/${fileName}.pdf`;
 
-    // const pdfPath = path.join(ROOT_DIR, `${fileName}.pdf`);
+    fs.writeFileSync(docxPath, doc);
 
-    // fs.writeFileSync(docxPath, doc);
+    topdf.convert(docxPath, pdfPath);
 
-    // topdf.convert(docxPath, pdfPath);
+    await Promise.all([
+      uploadToAzure(
+        docxPath,
+        `${data.ens_id}/${fileName}.docx`,
+        data.session_id
+      ),
+      uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
+    ]);
 
-    // await Promise.all([
-    //   uploadToAzure(
-    //     docxPath,
-    //     `${data.ens_id}/${fileName}.docx`,
-    //     data.session_id,
-    //   ),
-    //   // uploadToAzure(pdfPath, `${data.ens_id}/${fileName}.pdf`, data.session_id),
-    // ]);
+    // Cleanup local files after upload
+    await Promise.all([
+      fs.promises.unlink(docxPath),
+      fs.promises.unlink(pdfPath),
+    ]);
 
-    // // Cleanup local files after upload
-    // await Promise.all([
-    //   fs.promises.unlink(docxPath),
-    //   // fs.promises.unlink(pdfPath),
-    // ]);
-
-    await uploadBufferToAzure(
-      doc,
-      `${data.ens_id}/${data.name}.docx`,
-      data.session_id,
-    );
+    await handleReportStatus('COMPLETED', data);
   } catch (error) {
-    throw new Error(`Error generating report: ${error.message}`);
+    console.error('Error generating report:', error);
+    await handleReportStatus('FAILED', data);
+    throw new Error('Report generation failed');
   }
 };
+
+async function handleReportStatus(status, data) {
+  await updateTable(
+    'supplier_master_data',
+    { report_generation_status: status },
+    data.ens_id,
+    data.session_id
+  );
+
+  emitReportStatus({
+    ens_id: data.ens_id,
+    report_status: status,
+  });
+}

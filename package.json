@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -25,10 +24,11 @@
     "express": "^4.21.1",
     "fs": "^0.0.1-security",
     "glob": "^11.0.1",
+    "http": "^0.0.1-security",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "path": "^0.12.7",
     "pg": "^8.13.1",
+    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.0.5"

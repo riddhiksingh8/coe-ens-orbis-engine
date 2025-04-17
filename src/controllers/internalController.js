@@ -18,7 +18,6 @@ export const reportGenerationNode = async (req, res, next) => {
     await generateReport(req.body);
 
     return handleResponse(res, 200, {
-      data: req.body,
       message: 'Report generated successfully',
     });
   } catch (err) {
