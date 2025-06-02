@@ -10,6 +10,8 @@ import axios from 'axios';
 
 import {OrbisGridLogin} from '../utils/auth.js';
 import fs from "fs";
+import langdetect from 'langdetect';
+
  
  const matchcompaniesresponse = JSON.parse(
    fs.readFileSync(new URL("../dummydata/matchcompanies.json", import.meta.url))
@@ -207,7 +209,7 @@ export const getCompanyData = async (req, res) => {
       }
     } else {
       return res
-        .status(response.status)
+        .status(409)
         .json({ error: "API request failed.", details: response.data });
     }
   } catch (error) {
@@ -280,7 +282,7 @@ export const getTruesightCompanyData = async (req, res) => {
 
             return res.status(200).json({ success: true, message: "Successful", data: data["Data"]})
         } else {
-            return res.status(response.status).json({ error: 'API request failed.', details: response.data });
+            return res.status(409).json({ success: false, error: 'API request failed.', details: response.data });
         }
     } catch (error) {
         console.error('Error fetching data from Orbis API:', error);
@@ -347,7 +349,7 @@ export const getTruesightCompanyData2 = async (req, res) => {
 
             return res.status(200).json({ success: true, message: "Successful", data: data["Data"]})
         } else {
-            return res.status(response.status).json({ error: 'API request failed.', details: response.data });
+            return res.status(409).json({ error: 'API request failed.', details: response.data });
         }
     } catch (error) {
         console.error('Error fetching data from Orbis API:', error);
@@ -362,7 +364,7 @@ export const getOrbisCompanyData = async (req, res) => {
     if (!bvdId) {
         return res.status(400).json({ error: 'Missing required query parameters: bvdId' });
     }
-  
+
     // const endpoint = `${process.env.DOMAIN}v1/orbis/Companies/data`;
 
     const endpoint = `https://api.bvdinfo.com/v1/orbis/Companies/data`;
@@ -372,7 +374,13 @@ export const getOrbisCompanyData = async (req, res) => {
         ],
         "SELECT": [
           { "NAME": { "AS": "NAME" } },
-          { "ADDRESS_LINE1": { "AS": "ADDRESS_LINE1" } },
+//          { "ADDRESS_LINE1": { "AS": "ADDRESS_LINE1" } },
+          {"EMAIL": {"LIMIT":1,"AS":"EMAIL"}},
+          {"ADDRESS_LINE1_LOCAL": {"AS":"ADDRESS_LINE1"}},
+          {"ADDRESS_LINE2_LOCAL": {"AS":"ADDRESS_LINE2"}},
+          {"ADDRESS_LINE3_LOCAL": {"AS":"ADDRESS_LINE3"}},
+          {"ADDRESS_LINE4_LOCAL": {"AS":"ADDRESS_LINE4"}},
+          {"POSTCODE_LOCAL": {"AS":"POSTCODE"}},
           { "COUNTRY": { "AS": "COUNTRY" } },
           { "CITY_STANDARDIZED": { "AS": "CITY_STANDARDIZED" } },
           {"STATUS": {"LIMIT":1,"AS":"STATUS"}},
@@ -561,7 +569,26 @@ export const getOrbisCompanyData = async (req, res) => {
           {"LEGAL_EVENTS_SOURCE": {"AS":"LEGAL_EVENTS_SOURCE"}},
           {"LEGAL_EVENTS_ID": {"AS":"LEGAL_EVENTS_ID"}},
           {"LEGAL_EVENTS_TYPES_VALUE": {"AS":"LEGAL_EVENTS_TYPES_VALUE"}},
-          {"LEGAL_EVENTS_DETAILS": {"AS":"LEGAL_EVENTS_DETAILS"}}
+          {"LEGAL_EVENTS_DETAILS": {"AS":"LEGAL_EVENTS_DETAILS"}},
+          {"CPYCONTACTS_MEMBERSHIP_Function": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_JobTitle"}},
+          {"CPYCONTACTS_MEMBERSHIP_CurrentPrevious": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_Current_or_Previous"}},
+          {"CPYCONTACTS_MEMBERSHIP_DepartmentFromHierCodeFall2009": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_DepartmentorBoard"}},
+          {"CPYCONTACTS_MEMBERSHIP_LevelFromHierCodeFall2009": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_Level"}},
+          {"CPYCONTACTS_MEMBERSHIP_IsAShareholderFormatted": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_IsAShareholder"}},
+          {"BO_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_BVD_ID_NUMBER"}},
+          {"BO_UCI": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_UCI"}},
+          {"OUB_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"OUB_BVD_ID_NUMBER"}},
+          {"SH_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=Shareholders;Shareholders.AlsoSelectNotListedShareholders=1;Shareholders.RemoveBranches=0;Shareholders.RemoveVessels=0;Shareholders.RecursionLevel=1;","AS":"SH_BVD_ID_NUMBER"}},
+          {"SH_UCI": {"FILTERS":"Filter.Name=Shareholders;Shareholders.AlsoSelectNotListedShareholders=1;Shareholders.RemoveBranches=0;Shareholders.RemoveVessels=0;Shareholders.RecursionLevel=1;","AS":"SH_UCI"}},
+          {"GUO_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=GlobalUltimateOwners;GlobalUltimateOwners.RemoveVessels=1;GlobalUltimateOwners.IsBvDLiensNote131=1;GlobalUltimateOwners.ControlShareholders=0;GlobalUltimateOwners.UltimatesIASOnlyEqU=1;GlobalUltimateOwners.UseBranchHeadQuarter=1;GlobalUltimateOwners.IsBvDLiensNote53=1;GlobalUltimateOwners.Ultimates=0;GlobalUltimateOwners.ListedIASDefinitionOnly=0;GlobalUltimateOwners.QuotedShareholders=0;GlobalUltimateOwners.UltimatesIASOnlyDiffU=1;","AS":"GUO_BVD_ID_NUMBER"}},
+          {"GUO_UCI": {"FILTERS":"Filter.Name=GlobalUltimateOwners;GlobalUltimateOwners.RemoveVessels=1;GlobalUltimateOwners.IsBvDLiensNote131=1;GlobalUltimateOwners.ControlShareholders=0;GlobalUltimateOwners.UltimatesIASOnlyEqU=1;GlobalUltimateOwners.UseBranchHeadQuarter=1;GlobalUltimateOwners.IsBvDLiensNote53=1;GlobalUltimateOwners.Ultimates=0;GlobalUltimateOwners.ListedIASDefinitionOnly=0;GlobalUltimateOwners.QuotedShareholders=0;GlobalUltimateOwners.UltimatesIASOnlyDiffU=1;","AS":"GUO_UCI"}},
+          {"SUB_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=Subsidiaries;Subsidiaries.RemoveVessels=0;Subsidiaries.RemoveBranches=1;Subsidiaries.ControlShareholders=0;Subsidiaries.UltimatesIASOnlyEqU=1;Subsidiaries.QuotedShareholders=0;Subsidiaries.UltimatesIASOnlyDiffU=1;Subsidiaries.Ultimates=0;Subsidiaries.ListedIASDefinitionOnly=0;Subsidiaries.IsBvDLiensNote53=1;Subsidiaries.RecursionLevel=1;","AS":"SUB_BVD_ID_NUMBER"}},
+          {"CSH_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=ControllingShareholders;ControllingShareholders.RemoveVessels=1;ControllingShareholders.ControlShareholders=0;ControllingShareholders.UltimatesIASOnlyEqU=1;ControllingShareholders.UseBranchHeadQuarter=1;ControllingShareholders.IsBvDLiensNote53=1;ControllingShareholders.RemoveSubjectFromPathToGUO=1;ControllingShareholders.Ultimates=0;ControllingShareholders.ListedIASDefinitionOnly=0;ControllingShareholders.PathToUltimate=1;ControllingShareholders.QuotedShareholders=0;ControllingShareholders.UltimatesIASOnlyDiffU=1;","AS":"CSH_BVD_ID_NUMBER"}},
+          {"CSH_UCI": {"FILTERS":"Filter.Name=ControllingShareholders;ControllingShareholders.RemoveVessels=1;ControllingShareholders.ControlShareholders=0;ControllingShareholders.UltimatesIASOnlyEqU=1;ControllingShareholders.UseBranchHeadQuarter=1;ControllingShareholders.IsBvDLiensNote53=1;ControllingShareholders.RemoveSubjectFromPathToGUO=1;ControllingShareholders.Ultimates=0;ControllingShareholders.ListedIASDefinitionOnly=0;ControllingShareholders.PathToUltimate=1;ControllingShareholders.QuotedShareholders=0;ControllingShareholders.UltimatesIASOnlyDiffU=1;","AS":"CSH_UCI"}},
+          {"US_STATE": {"AS":"US_STATE"}},
+          {"CPYCONTACTS_MEMBERSHIP_BeginningNominationDate": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_BeginningNominationDate"}},
+          {"CPYCONTACTS_MEMBERSHIP_EndExpirationDate": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_EndExpirationDate"}},
+          {"CPYCONTACTS_HEADER_BvdId": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_HEADER_BvdId"}}
         ]
       };
     const headers = {
@@ -597,13 +624,13 @@ export const getOrbisCompanyData = async (req, res) => {
           }
       
           let result = arr1
-              .map((item, index) => item !== null ? { "value": item, "closing_date": arr2[index] } : null)
+              .map((item, index) => (item !== null && item !== 0) ? { "value": item, "closing_date": arr2[index] } : null)
               .filter(item => item !== null);
       
           return result.length > 0 ? JSON.stringify(result, null, 2) : null;
         }
 
-        function formatOwnershipData(names, directPct, totalPct, sanctions, watchlist, pep, media) {
+        function formatOwnershipData(names, directPct, totalPct, sanctions, watchlist, pep, media, bvd_id, contact_id) {
           if (!Array.isArray(names)) {
 //              console.error("Error: 'names' is not an array or is null.", names);
               return null; // Return null to prevent crashing
@@ -617,9 +644,14 @@ export const getOrbisCompanyData = async (req, res) => {
           watchlist = ensureArray(watchlist);
           pep = ensureArray(pep);
           media = ensureArray(media);
+          bvd_id = ensureArray(bvd_id);
+          contact_id = ensureArray(contact_id);
+
       
           return names.map((name, index) => ({
               "name": name || "Unknown",
+              "bvd_id": bvd_id[index] !== undefined ? bvd_id[index] : "n.a",
+              "contact_id": contact_id[index] !== undefined ? contact_id[index] : "n.a" ,
               "direct_ownership": directPct[index] !== undefined ? directPct[index] : "n.a",
               "total_ownership": totalPct[index] !== undefined ? totalPct[index] : "n.a",
               "sanctions_indicator": sanctions[index] !== undefined ? sanctions[index] : "n.a",
@@ -649,7 +681,7 @@ export const getOrbisCompanyData = async (req, res) => {
             data.SH_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED, 
             data.SH_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED, 
             data.SH_GRID_MATCH_PEP_INDICATOR_FORMATTED, 
-            data.SH_GRID_MATCH_MEDIA_INDICATOR_FORMATTED
+            data.SH_GRID_MATCH_MEDIA_INDICATOR_FORMATTED, data.SH_BVD_ID_NUMBER, data.SH_UCI
         )|| null;
         
         const global_ultimate_owner = formatOwnershipData(
@@ -657,15 +689,19 @@ export const getOrbisCompanyData = async (req, res) => {
             data.GUO_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED, 
             data.GUO_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED, 
             data.GUO_GRID_MATCH_PEP_INDICATOR_FORMATTED, 
-            data.GUO_GRID_MATCH_MEDIA_INDICATOR_FORMATTED
+            data.GUO_GRID_MATCH_MEDIA_INDICATOR_FORMATTED,
+            data.GUO_BVD_ID_NUMBER,
+            data.GUO_UCI
         )|| null;
-        
+
+        let empty_uci = []
         const ultimately_owned_subsidiaries = formatOwnershipData(
             data.SUB_NAME, data.SUB_DIRECT_PCT, data.SUB_TOTAL_PCT, 
             data.SUB_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED, 
             data.SUB_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED, 
             data.SUB_GRID_MATCH_PEP_INDICATOR_FORMATTED, 
-            data.SUB_GRID_MATCH_MEDIA_INDICATOR_FORMATTED
+            data.SUB_GRID_MATCH_MEDIA_INDICATOR_FORMATTED,
+            data.SUB_BVD_ID_NUMBER, empty_uci
         )|| null;
         
         const controlling_shareholders = formatOwnershipData(
@@ -673,7 +709,8 @@ export const getOrbisCompanyData = async (req, res) => {
             data.CSH_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED,
             data.CSH_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED,
             data.CSH_GRID_MATCH_PEP_INDICATOR_FORMATTED,
-            data.CSH_GRID_MATCH_MEDIA_INDICATOR_FORMATTED
+            data.CSH_GRID_MATCH_MEDIA_INDICATOR_FORMATTED,
+            data.CSH_BVD_ID_NUMBER, data.CSH_UCI
         ) || null;
 
         const beneficial_owners_intermediatory = data.BOI_NAME?.map((_, ownerIndex) => 
@@ -691,6 +728,7 @@ export const getOrbisCompanyData = async (req, res) => {
         const other_ultimate_beneficiary = Array.isArray(data.OUB_NAME) ? 
             data.OUB_NAME.map((name, index) => ({
                 "name": name || "Unknown",
+                "bvd_id": data.OUB_BVD_ID_NUMBER?.[index] || "n.a",
                 "sanctions_indicator": data.OUB_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED?.[index] || "n.a",
                 "watchlist_indicator": data.OUB_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED?.[index] || "n.a",
                 "pep_indicator": data.OUB_GRID_MATCH_PEP_INDICATOR_FORMATTED?.[index] || "n.a",
@@ -701,6 +739,8 @@ export const getOrbisCompanyData = async (req, res) => {
         const beneficial_owners = Array.isArray(data.BO_NAME) ? 
             data.BO_NAME.map((name, index) => ({
                 "name": name || "Unknown",
+                "bvd_id": data.BO_BVD_ID_NUMBER?.[index] || "n.a",
+                "contact_id": data.BO_UCI?.[index] || "n.a",
                 "sanctions_indicator": data.BO_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED?.[index] || "n.a",
                 "watchlist_indicator": data.BO_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED?.[index] || "n.a",
                 "pep_indicator": data.BO_GRID_MATCH_PEP_INDICATOR_FORMATTED?.[index] || "n.a",
@@ -716,6 +756,14 @@ export const getOrbisCompanyData = async (req, res) => {
                     {
                         "name": data.CPYCONTACTS_HEADER_FullNameOriginalLanguagePreferred?.[index] || "Unknown",
                         "id": id || "n.a",
+                        "job_title": data.CPYCONTACTS_MEMBERSHIP_JobTitle?.[index] || "n.a",
+                        "department": data.CPYCONTACTS_MEMBERSHIP_DepartmentorBoard?.[index] || "n.a",
+                        "current_or_previous": data.CPYCONTACTS_MEMBERSHIP_Current_or_Previous?.[index] || "n.a",
+                        "appointment_date": data.CPYCONTACTS_MEMBERSHIP_BeginningNominationDate?.[index] || "n.a",
+                        "resignation_date":data.CPYCONTACTS_MEMBERSHIP_EndExpirationDate?.[index] || "n.a",
+                        "associated_bvd_id": data.CPYCONTACTS_HEADER_BvdId?.[index] || "n.a",
+                        "is_shareholder": data.CPYCONTACTS_MEMBERSHIP_IsAShareholder?.[index] || "n.a",
+                        "heirarchy": data.CPYCONTACTS_MEMBERSHIP_Level?.[index] || "n.a",
                         "sanctions_indicator": data.CPYCONTACTS_HEADER_GRID_MATCH_SANCTIONS_INDICATOR?.[index] || "n.a",
                         "watchlist_indicator": data.CPYCONTACTS_HEADER_GRID_MATCH_WATCHLIST_INDICATOR?.[index] || "n.a",
                         "pep_indicator": data.CPYCONTACTS_HEADER_GRID_MATCH_PEP_INDICATOR?.[index] || "n.a",
@@ -789,11 +837,11 @@ export const getOrbisCompanyData = async (req, res) => {
             response = {
                 name: data.NAME || null,
                 country: data.COUNTRY || null,
-                location: [data.CITY_STANDARDIZED, data.COUNTRY].filter(Boolean).join(', ') || null,
-                address: [data.ADDRESS_LINE1, data.CITY_STANDARDIZED, data.COUNTRY].filter(Boolean).join(', ') || null,
+                location: [data.CITY_STANDARDIZED,data.US_STATE, data.COUNTRY].filter(Boolean).join(', ') || null,
+                address: [data.ADDRESS_LINE1, data.ADDRESS_LINE2, data.ADDRESS_LINE3, data.ADDRESS_LINE4, data.POSTCODE, data.CITY_STANDARDIZED, data.US_STATE, data.COUNTRY].filter(Boolean).join(', ') || null,
                 is_active: data.STATUS?.[0] || null, 
                 operation_type: data.ENTITY_TYPE || null, 
-                website: data.WEBSITE?.[0] ?? null,
+                website: data.WEBSITE?.[0] ?? (data.EMAIL?.[0] ? `www.${data.EMAIL[0].split('@')[1]}` : null),
                 no_of_employee: data.EMPL || null,
                 legal_form: data.STANDARDISED_LEGAL_FORM || null,
                 bvd_id: data.BVD_ID_NUMBER || null,
@@ -866,7 +914,7 @@ export const getOrbisCompanyData = async (req, res) => {
                 res.status(409).json({ success: false,  message: error.message, data: response});
             }
         } else {
-            return res.status(response.status).json({ error: 'API request failed.', details: response.name });
+            return res.status(409).json({ error: 'API request failed.', details: response.name });
         }
     } catch (error) {
         console.error('Error fetching data from Orbis API:', error);
@@ -941,7 +989,7 @@ export const getGridData = async (req, res) => {
                 : { success: false, message: updated_response.message, data: false, adv_count:0}
         );
     } catch (error) {
-        console.error(' Error fetching data:', error);
+        console.error('Error fetching data:', error);
         return res.status(500).json({success:false, error: 'Internal server error.', details: error.message, data:false, adv_count:0 });
     }
 };
@@ -1168,7 +1216,7 @@ export const getOrbisGridData = async (req, res) => {
                 return res.status(409).json({ success: false,  message: error.message, data: false, adv_count:0});
             }
         } else {
-            return res.status(500).json({success: false, error: 'API request failed.', data: false, adv_count:0 });
+            return res.status(409).json({success: false, error: 'API request failed.', data: false, adv_count:0 });
         }
     } catch (error) {
         console.error('Error fetching data from Orbis API:', error);
@@ -1229,7 +1277,8 @@ export const getOrbisGridData = async (req, res) => {
      };
 
     try {
-        let responseData = await makeAuthenticatedRequest(url, payload, headers, action);        
+        let responseData = await makeAuthenticatedRequest(url, payload, headers, action);
+        console.log("request completed")
         if (!responseData) {
           console.log("error API failed")
             return res.status(500).json({ success: false, data: false, error: 'API request failed.', adv_count:0 });
@@ -1257,7 +1306,7 @@ export const getOrbisGridData = async (req, res) => {
         };
         if (responseData.data.reviewStatus === 'NOMATCH'){  
           console.log("No match")
-          return res.status(409).json({ success: false, data: "No Match found", adv_count:0 });}
+          return res.status(200).json({ success: true, data: "No Match found", adv_count:0 });}
         
         if (responseData.data.reviewStatus === 'LOAD') {
           console.log("Track Id is not unique") 
@@ -1270,9 +1319,12 @@ export const getOrbisGridData = async (req, res) => {
 //          const alertEntity = nonReviewedAlerts.length > 0 && nonReviewedAlerts[0].matchScore >= 90
 //                  ? nonReviewedAlerts[0]
 //                  : null; // Take the first alert
+            // Filter non-reviewed alerts to only those with match score >= 96
           const validAlerts = nonReviewedAlerts.filter(alert => alert.matchScore >= 96);
+          // From the valid alerts, find the one with the highest match score
+          // If none found, assign null
           const alertEntity = validAlerts.length > 0 ? validAlerts.reduce((max, current) => current.matchScore > max.matchScore ? current : max) : null;
-
+          console.log('length of alert:', alertEntity ? alertEntity.length : 0);
           if (alertEntity) {
               alertEntity.event.forEach(event => {
                   const entityData = {
@@ -1301,6 +1353,7 @@ export const getOrbisGridData = async (req, res) => {
           }
         });
         try {
+            console.log("in try block")
           const grid_sanctions= categorizedData.event_sanctions.length > 0 ? JSON.stringify(categorizedData.event_sanctions, null, 2) : null;
           const grid_regulatory= categorizedData.event_regulatory.length > 0 ? JSON.stringify(categorizedData.event_regulatory, null, 2) : null;
           const grid_bribery_fraud_corruption= categorizedData.event_bribery_fraud_corruption.length > 0 ? JSON.stringify(categorizedData.event_bribery_fraud_corruption, null, 2) : null;
@@ -1336,6 +1389,7 @@ export const getOrbisGridData = async (req, res) => {
             RETURNING *;`,
             [ensId, contactId, sessionId, grid_sanctions, grid_regulatory, grid_bribery_fraud_corruption, grid_pep, grid_adverse_media_other_crimes, grid_adverse_media_reputational_risk, grid_legal]
           );
+//          console.log("result:",result)
           const crimes = JSON.parse(grid_adverse_media_other_crimes || "[]");
           const reputationalRisk = JSON.parse(grid_adverse_media_reputational_risk || "[]");
 
@@ -1381,10 +1435,10 @@ export const getGridDataOrganizationWithId = async (req, res) => {
   try {
       let responseData = await makeAuthenticatedRequest(fullUrl, queryString, headers, action);
       if (!responseData) {
-          return res.status(200).json({ success: true,message: "API request failed", error: "API request failed", data: false, adv_count:0});
+          return res.status(500).json({ success: false ,message: "API request failed", error: "API request failed", data: false, adv_count:0});
       }
       if (!responseData.gridEntityRec[0]){
-        return res.status(201).json({ success: false, message: 'No event for the particular entity', data: false, adv_count:0 });
+        return res.status(200).json({ success: true, message: 'No event for the particular entity', data: false, adv_count:0 });
       }
 
       const categorizedData = categorization(responseData.gridEntityRec[0].gridEntityInfo.gridEntity, bvdId);
@@ -1504,10 +1558,10 @@ export const getGridDataPersonnelWithId = async (req, res) => {
   try {
       let responseData = await makeAuthenticatedRequest(fullUrl, queryString, headers, action);
       if (!responseData) {
-          return res.status(500).json({ error: 'API request failed.' });
+          return res.status(500).json({success: false, error: 'API request failed.', data: false });
       }
       if (!responseData.gridEntityRec[0]){
-        return res.status(201).json({ success: true, message: 'No event for the particular entity' });
+        return res.status(200).json({ success: true, message: 'No event for the particular entity', data:false });
       }
 
       const categorizedData = categorization(responseData.gridEntityRec[0].gridEntityInfo.gridEntity, bvdId);
@@ -1566,20 +1620,29 @@ export const getOrbisNews = async (req, res) => {
 
 
         // const response = matchcompaniesresponse;
-
+//        var langdetect = require('langdetect');
         if (response1.status === 200) {
             const data = response1.data.Data
 //            console.log("length of article:", data.length, data)
             let formattedResponse = Array.isArray(data) && data.length > 0
                 ? JSON.stringify(
                     data
-                        .filter(item => item.DATE) // Ensure Date exists
-                        .sort((a, b) => new Date(b.DATE) - new Date(a.DATE)) // Sort by Date descending
-                        .slice(0, 20) // Limit to top 20 articles
+                        .filter(item => item.DATE && item.ARTICLE) // Ensure DATE and ARTICLE exist
                         .map(item => ({
                             ...item,
-                            ARTICLE: item.ARTICLE ? item.ARTICLE.replace(/<[^>]*>/g, '') : '' // Remove HTML tags
-                        })),
+                            ARTICLE: item.ARTICLE.replace(/<[^>]*>/g, '') // Remove HTML early
+                        }))
+                        .filter(item => {
+                            try {
+                                const lang = langdetect.detectOne(item.ARTICLE);
+                                return lang === 'en';
+                            } catch (error) {
+                                console.warn('Language detection failed:', error);
+                                return false;
+                            }
+                        })
+                        .sort((a, b) => new Date(b.DATE) - new Date(a.DATE)) // Sort by Date descending
+                        .slice(0, 20), // Limit to top 20
                     null,
                     2 // Pretty-print JSON
                 )
@@ -1593,7 +1656,7 @@ export const getOrbisNews = async (req, res) => {
             const interted_response = await updateTable(tableName, response, ensId, sessionId);
             return res.status(200).json({ success: true, message: "Successfully saved data", data: interted_response});
         } else {
-            return res.status(response1.status).json({success: true, error: 'API request failed.', details: response1.data, data: false });
+            return res.status(409).json({success: true, error: 'API request failed.', details: response1.data, data: false });
         }
     } catch (error) {
         console.error('Error fetching data from Orbis API:', error);

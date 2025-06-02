@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
 import pool from './config/db.js';
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
@@ -9,11 +10,15 @@ import orbisRoutes from './routes/orbisRouter.js';
 import errorHandling from './middlewares/errorHandler.js';
 import createOrgTable from './data/createOrgTable.js';
 import { globSync } from 'glob';
+import { initializeSocket } from './utils/socketUtil.js';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+const server = http.createServer(app);
+initializeSocket(server);
 
 // Middlewares
 app.use(express.json({ limit: '50mb' }));
@@ -63,6 +68,6 @@ app.get('/', async (req, res) => {
 });
 
 // Server running
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
