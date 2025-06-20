@@ -26,7 +26,8 @@ const gridPersonnelScheme = Joi.object({
   ensId: Joi.string().min(3).required(),
   contactId: Joi.string().min(3).required(),
   city: Joi.string().min(3),
-  country: Joi.string().min(2)
+  country: Joi.string().min(2),
+  managementInfo: Joi.object()
 });
 
 
@@ -122,8 +123,8 @@ export const validateId = (req, res, next) => {
 
 
 export const validateGridPersonnel = (req, res, next) => {
-  console.log("requestbody",req.query)
-  const { error } = gridPersonnelScheme.validate(req.query);
+  console.log("requestbody",req.body)
+  const { error } = gridPersonnelScheme.validate(req.body);
   console.log(error)
   if (error)
     return res.status(400).json({

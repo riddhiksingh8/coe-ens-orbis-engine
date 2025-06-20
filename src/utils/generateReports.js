@@ -19,8 +19,6 @@ import * as cheerio from 'cheerio';
 import { BlobServiceClient } from '@azure/storage-blob';
 
 import { getOrdinalSuffix, getRiskColor } from './helpers.js';
-import { emitReportStatus } from './socketUtil.js';
-import { updateTable } from './db_utils.js';
 
 let template = 'aramco_template.docx';
 let links = [];
@@ -155,6 +153,44 @@ const highlightRating = (rating) => ({
     }),
   ],
 });
+
+const noAnnexure = () => {
+  return [
+    new Table({
+      width: {
+        size: 100,
+        type: WidthType.PERCENTAGE,
+      },
+
+      rows: [
+        new TableRow({
+          height: { rule: 'atLeast', value: 500 },
+          children: [
+            new TableCell({
+              verticalAlign: 'center',
+              shading: {
+                fill: 'F2F2F2',
+              },
+              children: [
+                new Paragraph({
+                  alignment: 'center',
+                  children: [
+                    new TextRun({
+                      text: 'NO ANNEXURE',
+                      bold: true,
+                      size: 20,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    }),
+    new Paragraph({}),
+  ];
+};
 
 const createNoHitsTable = (text = '') => {
   return [
@@ -384,7 +420,7 @@ const createFindingsInnerTable = (findings) => {
                         bold: true,
                       }),
                       new TextRun({
-                        text: 'High: <650; Medium: 650-750; Low: 750 - 900',
+                        text: 'High: <650; Medium: 650-750; Low: 751 - 900',
                         break: 1,
                       }),
                     ],
@@ -527,6 +563,56 @@ const createFindingsTable = (findings) => {
                       new TextRun({ text: ' EY Network Alliance Databases' }),
                       new TextRun({ text: '', break: 1 }),
                     ],
+                  }),
+                new Paragraph({}),
+              ],
+
+              shading: { fill: 'ffffff' },
+              columnSpan: 4,
+            }),
+          ],
+        }),
+      ],
+    }),
+    new Paragraph({}),
+  ];
+};
+
+const annexureTable = (info) => {
+  return [
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+
+      rows: [
+        // Header row
+        new TableRow({
+          height: { rule: 'atLeast', value: 500 },
+          // cantSplit: true,
+          children: [
+            createCell(info.title, {
+              background: 'f2f2f2',
+              alignment: 'left',
+              bold: true,
+              width: {
+                size: 100,
+                type: WidthType.PERCENTAGE,
+              },
+            }),
+          ],
+        }),
+
+        new TableRow({
+          height: { rule: 'atLeast', value: 500 },
+          children: [
+            new TableCell({
+              children: [
+                ...info.contents
+                  .trim()
+                  .split(/\n+/)
+                  .map((text) => {
+                    return new Paragraph({
+                      children: [new TextRun({ text, break: 1 })],
+                    });
                   }),
                 new Paragraph({}),
               ],
@@ -692,6 +778,13 @@ export const generateReport = async (payload) => {
       outputType: 'nodebuffer',
       data: fs.readFileSync(TEMPLATE_PATH),
       patches: {
+        vendorId: createTextRun({
+          text: `Vendor ID: ${data.external_vendor_id}`,
+        }),
+        uploadedName: createTextRun({
+          text: `[${data.uploaded_name}]`,
+        }),
+
         title: createTextRun({
           text: data.name,
         }),
@@ -714,9 +807,30 @@ export const generateReport = async (payload) => {
         company_address: createTextRun({
           text: data.address,
         }),
-        company_website: createTextRun({
-          text: data.website,
+        company_uploaded_name: createTextRun({
+          text: data.uploaded_name,
         }),
+        company_external_vendor_id: createTextRun({
+          text: data.external_vendor_id,
+        }),
+        company_website: {
+          type: PatchType.DOCUMENT,
+          children: [
+            new Paragraph({
+              children: [
+                new ExternalHyperlink({
+                  children: [
+                    new TextRun({
+                      text: data.website,
+                      style: 'Hyperlink',
+                    }),
+                  ],
+                  link: data.website,
+                }),
+              ],
+            }),
+          ],
+        },
         company_active_status: createTextRun({
           text: data.active_status,
         }),
@@ -1028,6 +1142,14 @@ export const generateReport = async (payload) => {
           {}
         ),
 
+        annexure: {
+          type: PatchType.DOCUMENT,
+          children:
+            data.annexure.length > 0
+              ? data.annexure.map(annexureTable).flat()
+              : noAnnexure(),
+        },
+
         a_rating: highlightRating(data.riskData[0].rating),
         b_rating: highlightRating(data.riskData[1].rating),
         c_rating: highlightRating(data.riskData[2].rating),
@@ -1149,25 +1271,8 @@ export const generateReport = async (payload) => {
       fs.promises.unlink(docxPath),
       fs.promises.unlink(pdfPath),
     ]);
-
-    await handleReportStatus('COMPLETED', data);
   } catch (error) {
     console.error('Error generating report:', error);
-    await handleReportStatus('FAILED', data);
     throw new Error('Report generation failed');
   }
 };
-
-async function handleReportStatus(status, data) {
-  await updateTable(
-    'supplier_master_data',
-    { report_generation_status: status },
-    data.ens_id,
-    data.session_id
-  );
-
-  emitReportStatus({
-    ens_id: data.ens_id,
-    report_status: status,
-  });
-}

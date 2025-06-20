@@ -527,15 +527,15 @@ export const getOrbisCompanyData = async (req, res) => {
           {"CSH_ENTITY_TYPE": {"FILTERS":"Filter.Name=ControllingShareholders;ControllingShareholders.RemoveVessels=1;ControllingShareholders.ControlShareholders=0;ControllingShareholders.UltimatesIASOnlyEqU=1;ControllingShareholders.UseBranchHeadQuarter=1;ControllingShareholders.IsBvDLiensNote53=1;ControllingShareholders.RemoveSubjectFromPathToGUO=1;ControllingShareholders.Ultimates=0;ControllingShareholders.ListedIASDefinitionOnly=0;ControllingShareholders.PathToUltimate=1;ControllingShareholders.QuotedShareholders=0;ControllingShareholders.UltimatesIASOnlyDiffU=1;","AS":"CSH_ENTITY_TYPE"}},
           {"EMPL": {"UNIT":0,"INDEXORYEAR":"0","AS":"EMPL"}},
           {"WEBSITE": {"LIMIT":1,"AS":"WEBSITE"}},
-          {"BO_NAME": {"FILTERS": "Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS": "BO_NAME"}},
-          {"BO_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED": {"FILTERS": "Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS": "BO_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED"}},
-          {"BO_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED": {"FILTERS": "Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS": "BO_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED"}},
-          {"BO_GRID_MATCH_PEP_INDICATOR_FORMATTED": {"FILTERS": "Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS": "BO_GRID_MATCH_PEP_INDICATOR_FORMATTED"}},
-          {"BO_GRID_MATCH_MEDIA_INDICATOR_FORMATTED": {"FILTERS": "Filter.Name=BeneficialOwners;BeneficialOwners.MinPercentBOFirstLevel=1000;BeneficialOwners.MinPercentBOHigherLevel=5001;BeneficialOwners.MinPercentBOLastLevelIndividual=1000;BeneficialOwners.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwners.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwners.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwners.BOFromRegisterOnly=False;","AS": "BO_GRID_MATCH_MEDIA_INDICATOR_FORMATTED"}},
+          {"BO_NAME": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_NAME"}},
+          {"BO_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED"}},
+          {"BO_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED"}},
+          {"BO_GRID_MATCH_PEP_INDICATOR_FORMATTED": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_GRID_MATCH_PEP_INDICATOR_FORMATTED"}},
+          {"BO_GRID_MATCH_MEDIA_INDICATOR_FORMATTED": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_GRID_MATCH_MEDIA_INDICATOR_FORMATTED"}},
           {"OUB_GRID_MATCH_MEDIA_INDICATOR_FORMATTED": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"OUB_GRID_MATCH_MEDIA_INDICATOR_FORMATTED"}},
           {"OUB_POSSIBLE_PCT_CHANGE_DESCRIPTION": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"OUB_POSSIBLE_PCT_CHANGE_DESCRIPTION"}},
-          {"BO_POSSIBLE_PCT_CHANGE_DESCRIPTION": {"FILTERS": "Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS": "BO_POSSIBLE_PCT_CHANGE_DESCRIPTION"}},
-          {"MODE_FINANCE_MORE_EXPL_RATIO1": {"INDEXORYEAR":"0","AS":"MODE_FINANCE_MORE_EXPL_RATIO1"}}, 
+          {"BO_POSSIBLE_PCT_CHANGE_DESCRIPTION": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_POSSIBLE_PCT_CHANGE_DESCRIPTION"}},
+          {"MODE_FINANCE_MORE_EXPL_RATIO1": {"INDEXORYEAR":"0","AS":"MODE_FINANCE_MORE_EXPL_RATIO1"}},
           {"MODE_FINANCE_MORE_EXPL_RATIO2": {"INDEXORYEAR":"0","AS":"MODE_FINANCE_MORE_EXPL_RATIO2"}}, 
           {"MODE_FINANCE_MORE_EXPL_RATIO10": {"INDEXORYEAR":"0","AS":"MODE_FINANCE_MORE_EXPL_RATIO10"}}, 
           {"MODE_FINANCE_MORE_EXPL_RATIO3": {"INDEXORYEAR":"0","AS":"MODE_FINANCE_MORE_EXPL_RATIO3"}}, 
@@ -575,8 +575,8 @@ export const getOrbisCompanyData = async (req, res) => {
           {"CPYCONTACTS_MEMBERSHIP_DepartmentFromHierCodeFall2009": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_DepartmentorBoard"}},
           {"CPYCONTACTS_MEMBERSHIP_LevelFromHierCodeFall2009": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_Level"}},
           {"CPYCONTACTS_MEMBERSHIP_IsAShareholderFormatted": {"FILTERS":"Filter.Name=ContactsFilter;ContactsFilter.IfHomeOnlyReturnCountry=1;ContactsFilter.SourcesToExcludeQueryString=99B|59B|69B|70B|0|278;ContactsFilter.HierarchicCodeToExcludeQueryString=3|4;ContactsFilter.HierarchicCodeQueryString=0|1|2","AS":"CPYCONTACTS_MEMBERSHIP_IsAShareholder"}},
-          {"BO_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_BVD_ID_NUMBER"}},
-          {"BO_UCI": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_UCI"}},
+          {"BO_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_BVD_ID_NUMBER"}},
+          {"BO_UCI": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=2500;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=2500;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"BO_UCI"}},
           {"OUB_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=BeneficialOwnersFilter;BeneficialOwnersFilter.MinPercentBOFirstLevel=1000;BeneficialOwnersFilter.MinPercentBOHigherLevel=5001;BeneficialOwnersFilter.MinPercentBOLastLevelIndividual=1000;BeneficialOwnersFilter.AcceptNaPercentageAtLastLevelIndividual=True;BeneficialOwnersFilter.EjectIndividualsEvenIfAllWOUntilIndividualAndMinPercentBOFirstLevelIsOK=False;BeneficialOwnersFilter.KeepOnlyOnePathForEachBO_OUB=True;BeneficialOwnersFilter.BOFromRegisterOnly=False;","AS":"OUB_BVD_ID_NUMBER"}},
           {"SH_BVD_ID_NUMBER": {"FILTERS":"Filter.Name=Shareholders;Shareholders.AlsoSelectNotListedShareholders=1;Shareholders.RemoveBranches=0;Shareholders.RemoveVessels=0;Shareholders.RecursionLevel=1;","AS":"SH_BVD_ID_NUMBER"}},
           {"SH_UCI": {"FILTERS":"Filter.Name=Shareholders;Shareholders.AlsoSelectNotListedShareholders=1;Shareholders.RemoveBranches=0;Shareholders.RemoveVessels=0;Shareholders.RecursionLevel=1;","AS":"SH_UCI"}},
@@ -601,7 +601,7 @@ export const getOrbisCompanyData = async (req, res) => {
         // const data = supplierexternaltable;
         const getValue = (value) => value ?? null;
 
-        let opreArray = [data.OPRE, data.OPRE_1, data.OPRE_2, data.OPRE_3];
+        let opreArray = [data?.OPRE ?? [], data?.OPRE_1 ?? [], data?.OPRE_2 ?? [], data?.OPRE_3 ?? []];
         let opre_usdArray = [data.OPRE_usd, data.OPRE_1_usd, data.OPRE_2_usd, data.OPRE_3_usd];
         let plArray = [data.PL, data.PL_1, data.PL_2, data.PL_3];
         let currArray = [data.CURR, data.CURR_1, data.CURR_2, data.CURR_3];
@@ -617,6 +617,13 @@ export const getOrbisCompanyData = async (req, res) => {
         let ebdtaArray = [data.EBTA, data.EBTA_1, data.EBTA_2, data.EBTA_3];
         let roeArray = [data.ROE, data.ROE_1, data.ROE_2, data.ROE_3];
 
+        function isSignificant(DirectPctValue) {
+          const rawValue = String(DirectPctValue || "").toLowerCase();
+          const allMatches = rawValue.match(/\d+(\.\d+)?/g);
+          const numericValues = allMatches ? allMatches.map(parseFloat) : [];
+          const maxValue = numericValues.length > 0 ? Math.max(...numericValues) : 0;
+          return maxValue > 5;
+        }
 
         function createJsonFromArrays(arr1, arr2) {
           if (arr1.length !== arr2.length) {
@@ -657,7 +664,8 @@ export const getOrbisCompanyData = async (req, res) => {
               "sanctions_indicator": sanctions[index] !== undefined ? sanctions[index] : "n.a",
               "watchlist_indicator": watchlist[index] !== undefined ? watchlist[index] : "n.a",
               "pep_indicator": pep[index] !== undefined ? pep[index] : "n.a",
-              "media_indicator": media[index] !== undefined ? media[index] : "n.a"
+              "media_indicator": media[index] !== undefined ? media[index] : "n.a",
+              "significance": isSignificant(directPct[index] !== undefined ? directPct[index] : "n.a")
           }));
       }
         
@@ -721,7 +729,8 @@ export const getOrbisCompanyData = async (req, res) => {
                 "sanctions_indicator": data.BOI_GRID_MATCH_SANCTIONS_INDICATOR_FORMATTED?.[ownerIndex]?.[index] || "n.a",
                 "watchlist_indicator": data.BOI_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED?.[ownerIndex]?.[index] || "n.a",
                 "pep_indicator": data.BOI_GRID_MATCH_PEP_INDICATOR_FORMATTED?.[ownerIndex]?.[index] || "n.a",
-                "media_indicator": data.BOI_GRID_MATCH_MEDIA_INDICATOR_FORMATTED?.[ownerIndex]?.[index] || "n.a"
+                "media_indicator": data.BOI_GRID_MATCH_MEDIA_INDICATOR_FORMATTED?.[ownerIndex]?.[index] || "n.a",
+                "significance": isSignificant(data.BOI_DIRECT_PCT?.[ownerIndex] || "n.a")
             }))
         ) || null;        
 
@@ -733,7 +742,9 @@ export const getOrbisCompanyData = async (req, res) => {
                 "watchlist_indicator": data.OUB_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED?.[index] || "n.a",
                 "pep_indicator": data.OUB_GRID_MATCH_PEP_INDICATOR_FORMATTED?.[index] || "n.a",
                 "media_indicator":data.OUB_GRID_MATCH_MEDIA_INDICATOR_FORMATTED?.[index] || "n.a",
-                "possible percentage change": data.OUB_POSSIBLE_PCT_CHANGE_DESCRIPTION?.[index] || "n.a"
+                "possible percentage change": data.OUB_POSSIBLE_PCT_CHANGE_DESCRIPTION?.[index] || "n.a",
+                "significance": true // because according to query it is above 25%
+
             })) 
             : null;
         const beneficial_owners = Array.isArray(data.BO_NAME) ? 
@@ -745,7 +756,8 @@ export const getOrbisCompanyData = async (req, res) => {
                 "watchlist_indicator": data.BO_GRID_MATCH_WATCHLIST_INDICATOR_FORMATTED?.[index] || "n.a",
                 "pep_indicator": data.BO_GRID_MATCH_PEP_INDICATOR_FORMATTED?.[index] || "n.a",
                 "media_indicator":data.BO_GRID_MATCH_MEDIA_INDICATOR_FORMATTED?.[index] || "n.a",
-                "possible percentage change": data.BO_POSSIBLE_PCT_CHANGE_DESCRIPTION?.[index] || "n.a"
+                "possible percentage change": data.BO_POSSIBLE_PCT_CHANGE_DESCRIPTION?.[index] || "n.a",
+                "significance": true
             })) 
             : null;
         
@@ -938,7 +950,7 @@ export const getGridData = async (req, res) => {
     };
     const currentDate = new Date();
     const payload = {
-        "portfolioMonitoring": "true",
+        "portfolioMonitoring": "false",
         "portfolioMonitoringActionIfDuplicate": "REPLACE",
         "searchActionIfDuplicate": "SEARCH_UNLESS_SEARCHED",
         "loadOnly": "false",
@@ -1230,7 +1242,7 @@ export const getOrbisGridData = async (req, res) => {
     // Ensure token is valid before making request
     await ensureValidToken();
 
-    const { personnelName, sessionId, ensId, contactId, country, city } = req.query;
+    const { personnelName, sessionId, ensId, contactId, country, city, managementInfo } = req.body;
 
 
     const url = "https://service.rdc.eu.com/api/grid-service/v2/inquiry";
@@ -1243,7 +1255,7 @@ export const getOrbisGridData = async (req, res) => {
     const action = "post"
     const currentDate = new Date();
     const payload = {
-        "portfolioMonitoring":"true",
+        "portfolioMonitoring":"false",
         "portfolioMonitoringActionIfDuplicate":"REPLACE",
         "searchActionIfDuplicate":"SEARCH_UNLESS_SEARCHED",
         "loadOnly":"false",
@@ -1278,7 +1290,6 @@ export const getOrbisGridData = async (req, res) => {
 
     try {
         let responseData = await makeAuthenticatedRequest(url, payload, headers, action);
-        console.log("request completed")
         if (!responseData) {
           console.log("error API failed")
             return res.status(500).json({ success: false, data: false, error: 'API request failed.', adv_count:0 });
@@ -1313,6 +1324,7 @@ export const getOrbisGridData = async (req, res) => {
           return res.status(409).json({ success: false, data: "Tracking ID already in use", adv_count:0 });}
         
         let alerts=responseData.data.alerts
+        console.log(responseData.data.reviewStatus)
         alerts.forEach(alert => {
           const nonReviewedAlerts = alert.gridAlertInfo.alerts.nonReviewedAlertEntity;
       
@@ -1372,9 +1384,10 @@ export const getOrbisGridData = async (req, res) => {
               grid_pep,
               grid_adverse_media_other_crimes,
               grid_adverse_media_reputational_risk,
+              management_info,
               grid_legal
             ) VALUES (
-              $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+              $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
             )
             ON CONFLICT (ens_id, contact_id, session_id) 
             DO UPDATE SET 
@@ -1385,9 +1398,10 @@ export const getOrbisGridData = async (req, res) => {
               grid_adverse_media_other_crimes = EXCLUDED.grid_adverse_media_other_crimes,
               grid_adverse_media_reputational_risk = EXCLUDED.grid_adverse_media_reputational_risk,
               grid_legal = EXCLUDED.grid_legal,
+              management_info = EXCLUDED.management_info,
               update_time = NOW()
             RETURNING *;`,
-            [ensId, contactId, sessionId, grid_sanctions, grid_regulatory, grid_bribery_fraud_corruption, grid_pep, grid_adverse_media_other_crimes, grid_adverse_media_reputational_risk, grid_legal]
+            [ensId, contactId, sessionId, grid_sanctions, grid_regulatory, grid_bribery_fraud_corruption, grid_pep, grid_adverse_media_other_crimes, grid_adverse_media_reputational_risk, managementInfo, grid_legal]
           );
 //          console.log("result:",result)
           const crimes = JSON.parse(grid_adverse_media_other_crimes || "[]");
@@ -1399,6 +1413,7 @@ export const getOrbisGridData = async (req, res) => {
           console.log("get grid personnel",count);
           return res.status(200).json({ success: true, message: "Successfully saved data", data: result.rows, adv_count:count});
         } catch (error) {
+            console.error(' Error fetching data:', error);
           return res.status(409).json({ success: false,  message: error.message, data: "couldnt save data", adv_count:0});
         }
     } catch (error) {

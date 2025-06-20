@@ -1,10 +1,9 @@
 import pkg from 'pg';
 import dotenv from 'dotenv';
-import { emitSessionStatus } from '../utils/socketUtil.js';
 
 dotenv.config();
 
-const { Pool, Client } = pkg;
+const { Pool } = pkg;
 
 const config = {
   user: process.env.DB_USER,
@@ -26,37 +25,6 @@ pool.on('connect', () => {
 pool.on('error', (err) => {
   console.error('Connection pool error:', err);
 });
-
-// --- Create a dedicated client for LISTEN/NOTIFY ---
-const listenerClient = new Client(config);
-
-async function setupListener() {
-  try {
-    await listenerClient.connect();
-    console.log('Listener client connected to database');
-
-    await listenerClient.query('LISTEN session_id_status_channel');
-
-    listenerClient.on('notification', (msg) => {
-      try {
-        const payload = JSON.parse(msg.payload);
-
-        emitSessionStatus(payload);
-      } catch (err) {
-        console.error('Failed to parse payload:', err);
-      }
-    });
-
-    listenerClient.on('error', (err) => {
-      console.error('Listener client error:', err);
-    });
-  } catch (err) {
-    console.error('Failed to set up listener:', err);
-  }
-}
-
-// Initialize listener
-setupListener();
 
 // Export pool for use in queries
 export default pool;
