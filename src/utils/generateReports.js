@@ -18,9 +18,14 @@ import * as cheerio from 'cheerio';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 
-import { getOrdinalSuffix, getRiskColor } from './helpers.js';
+import {
+  formatHttpsURL,
+  getOrdinalSuffix,
+  getRiskColor,
+  isValidURL,
+} from './helpers.js';
 
-let template = 'aramco_template.docx';
+let template = 'elm_template-no-regulatory-legal.docx';
 let links = [];
 const kpi_codes = ['NWS1A', 'ONF1A'];
 
@@ -352,13 +357,6 @@ const createFindingsInnerTable = (findings) => {
                 }),
                 new Paragraph({}),
 
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: 'Source:', bold: true }),
-                    new TextRun({ text: ' EY Network Alliance Databases' }),
-                  ],
-                }),
-
                 new Paragraph({}),
 
                 findings.inner_title === 'ESG Indicators' &&
@@ -420,7 +418,7 @@ const createFindingsInnerTable = (findings) => {
                         bold: true,
                       }),
                       new TextRun({
-                        text: 'High: <650; Medium: 650-750; Low: 751 - 900',
+                        text: 'High: <651; Medium: 651-750; Low: 751 - 900',
                         break: 1,
                       }),
                     ],
@@ -555,15 +553,6 @@ const createFindingsTable = (findings) => {
                     });
                   }),
                 new Paragraph({}),
-                !kpi_codes.includes(findings.kpi_code) &&
-                  new Paragraph({
-                    children: [
-                      new TextRun({ text: '', break: 1 }),
-                      new TextRun({ text: 'Source:', bold: true }),
-                      new TextRun({ text: ' EY Network Alliance Databases' }),
-                      new TextRun({ text: '', break: 1 }),
-                    ],
-                  }),
                 new Paragraph({}),
               ],
 
@@ -761,7 +750,7 @@ export const generateReport = async (payload) => {
     );
 
     if (disableRegulatoryAndLegal) {
-      template = 'aramco_template-no-regulatory-legal.docx';
+      // template = 'aramco_template-no-regulatory-legal.docx';
       data.riskData.pop();
     }
 
@@ -779,7 +768,7 @@ export const generateReport = async (payload) => {
       data: fs.readFileSync(TEMPLATE_PATH),
       patches: {
         vendorId: createTextRun({
-          text: `Vendor ID: ${data.external_vendor_id}`,
+          text: `Supplier ID: ${data.external_vendor_id}`,
         }),
         uploadedName: createTextRun({
           text: `[${data.uploaded_name}]`,
@@ -818,15 +807,19 @@ export const generateReport = async (payload) => {
           children: [
             new Paragraph({
               children: [
-                new ExternalHyperlink({
-                  children: [
-                    new TextRun({
+                isValidURL(data.website)
+                  ? new ExternalHyperlink({
+                      children: [
+                        new TextRun({
+                          text: data.website,
+                          style: 'Hyperlink',
+                        }),
+                      ],
+                      link: formatHttpsURL(data.website),
+                    })
+                  : new TextRun({
                       text: data.website,
-                      style: 'Hyperlink',
                     }),
-                  ],
-                  link: data.website,
-                }),
               ],
             }),
           ],

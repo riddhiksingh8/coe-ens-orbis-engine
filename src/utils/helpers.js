@@ -41,3 +41,24 @@ export const getRiskColor = (rating) => {
     return { background: '2DB757', color: '000000' }; // Green
   return { background: 'F2F2F2', color: '000000' }; // Default white
 };
+
+export const isValidURL = (url) => {
+  const regex =
+    /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d{2,5})?(\/[^\s]*)?$/;
+  return regex.test(url);
+};
+
+export const formatHttpsURL = (url) => {
+  try {
+    const cleanURL = url.replace(/^www\./, '');
+
+    const hasProtocol = /^https?:\/\//.test(cleanURL);
+    const normalizedURL = hasProtocol ? cleanURL : `https://${cleanURL}`;
+
+    const parsed = new URL(normalizedURL);
+
+    return parsed.href;
+  } catch {
+    return url;
+  }
+};

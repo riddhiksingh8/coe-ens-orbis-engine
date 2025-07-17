@@ -73,7 +73,6 @@ const truesightRequestSchema1 = Joi.object({
 });
 
 export const validatePayload = (req, res, next) => {
-  console.log("truesightScheme_req.query",req.query)
   const { error } = truesightRequestSchema.validate(req.query);
   if (error)
     return res.status(400).json({
@@ -84,7 +83,6 @@ export const validatePayload = (req, res, next) => {
 };
 
 export const validatePayload1 = (req, res, next) => {
-  console.log("truesightScheme_req.query",req.query)
   const { error } = truesightRequestSchema1.validate(req.query);
   if (error)
     return res.status(400).json({
@@ -96,41 +94,32 @@ export const validatePayload1 = (req, res, next) => {
 
 
 export const validateGrid = (req, res, next) => {
-  console.log("requestbody",req.query)
   const { error } = gridScheme.validate(req.query);
-  console.log(error)
   if (error)
     return res.status(400).json({
       status: 400,
       message: error.details[0].message,
     });
-  console.log("done")
   next();
 };
 
 export const validateId = (req, res, next) => {
-  console.log("requestbody",req.query)
   const { error } = idScheme.validate(req.query);
-  console.log(error)
   if (error)
     return res.status(400).json({
       status: 400,
       message: error.details[0].message,
     });
-  console.log("done")
   next();
 };
 
 
 export const validateGridPersonnel = (req, res, next) => {
-  console.log("requestbody",req.body)
   const { error } = gridPersonnelScheme.validate(req.body);
-  console.log(error)
   if (error)
     return res.status(400).json({
       status: 400,
       message: error.details[0].message,
     });
-  console.log("done")
   next();
 };

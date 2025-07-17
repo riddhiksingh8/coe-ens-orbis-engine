@@ -64,7 +64,7 @@ router.get('/orbisgrid/companies', getCurrentUser, validateId, rateLimitMiddlewa
 router.get('/grid/companies', getCurrentUser, validateGrid, getGridData)
 
 // For getting the grid info from gridendpoint for Person [From Management Grid] [using table : grid_management for saving management data]
-router.get('/grid/personnels',getCurrentUser, validateGridPersonnel, rateLimitMiddleware, getGridDataPersonnels);
+router.post('/grid/personnels',getCurrentUser, validateGridPersonnel, rateLimitMiddleware, getGridDataPersonnels);
 
 // For getting grid info for unique\ Company by using bvdId []
 router.get('/grid/id/companies', getCurrentUser, validateId, rateLimitMiddleware, getGridDataOrganizationWithId);
